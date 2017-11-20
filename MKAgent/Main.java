@@ -43,6 +43,10 @@ public class Main
     		if (newCharacter == -1)
     			throw new EOFException("Input ended unexpectedly.");
     		message.append((char)newCharacter);
+
+
+            move = superAI.interpret(message)
+
     	} while((char)newCharacter != '\n');
 
 		return message.toString();
@@ -55,5 +59,6 @@ public class Main
 	public static void main(String[] args)
 	{
 		// TODO: implement
+        //Move = SuperAI.interpret(recvMsg());
 	}
 }
