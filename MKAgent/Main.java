@@ -45,7 +45,7 @@ public class Main
     		message.append((char)newCharacter);
 
 
-            move = superAI.interpret(message)
+            // move = superAI.interpret(message);
 
     	} while((char)newCharacter != '\n');
 
