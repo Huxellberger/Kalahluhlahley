@@ -44,21 +44,40 @@ public class Main
     			throw new EOFException("Input ended unexpectedly.");
     		message.append((char)newCharacter);
 
-
-            // move = superAI.interpret(message);
-
     	} while((char)newCharacter != '\n');
 
 		return message.toString();
     }
 
-	/**
-	 * The main method, invoked when the program is started.
-	 * @param args Command line arguments.
-	 */
-	public static void main(String[] args)
+    /**
+     * The main method, invoked when the program is started.
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args)
+    {
+	boolean playingGame = true;
+	while (playingGame)
 	{
-		// TODO: implement
-        //Move = SuperAI.interpret(recvMsg());
+	    try
+	    {
+		String receivedMessage = recvMsg();
+		switch(Protocol.getMessageType(receivedMessage))
+		{
+	          case START:
+	          case STATE:
+		      // System.out.println(receivedMessage);
+		      break;
+	          case END:
+		      playingGame = false;
+	          default:
+	        }
+	        // sendMsg();
+	    }
+	    catch(Exception exception)
+	    {
+		playingGame = false;
+		System.out.println("Something went wrong, exiting.");
+	    }
 	}
+    }
 }
