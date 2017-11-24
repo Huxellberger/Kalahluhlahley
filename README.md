@@ -22,7 +22,7 @@ It'll do all the good guff and maybe even play the game properly eventually.
 
 Only one. Since we don't have continous integration for this tiny project we should instead settle for simply **always run the build script before you submit!**. This will pick up any compiler errors/test failures.
 
-Also try to do any changes in a branch and then create a pull request to merge the changes in. This'll stop the build getting inundated with loads of changes in the last week. When you want to make a change first create a new branch with
+Also try to do any **chostier** changes in a branch and then create a pull request to merge the changes in. This'll stop the build getting inundated with loads of changes in the last week. When you want to make a change first create a new branch with
 
 `git checkout -b jake-terrible-code`
 
