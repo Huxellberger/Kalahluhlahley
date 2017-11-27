@@ -9,7 +9,7 @@
    <path id ="classpath.test">
      <pathelement location="lib/junit-4.12.jar"/>
      <pathelement location="lib/hamscrest-core.1.3.jar"/>
-     <pathelement location="${core.build.dir}/${ant.project.name}"/>
+     <pathelement location="${core.jar.dir}/${ant.project.name}.jar"/>
    </path>
 
     <target name="clean">
@@ -21,7 +21,18 @@
         <javac srcdir="${core.src.dir}" destdir="${core.build.dir}" includeantruntime="false"/>
     </target>
 
-    <target name="test-compile" depends="compile">
+     <target name="jar" depends="compile">
+        <mkdir dir="${core.jar.dir}"/>
+        <jar destfile="${core.jar.dir}/${ant.project.name}.jar"
+	     basedir="${core.build.dir}"
+	     includes="**/*.class">
+            <manifest>
+                <attribute name="Main-Class" value="MKAgent.Main"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="test-compile" depends="jar">
       <mkdir dir="${test.build.dir}"/>
       <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" includeantruntime="false">
         <classpath refid="classpath.test"/>
@@ -39,17 +50,6 @@
             <fileset dir="${test.build.dir}" includes="*Test*" />
         </batchtest>
       </junit>
-    </target>
-
-    <target name="jar" depends="test">
-        <mkdir dir="${core.jar.dir}"/>
-        <jar destfile="${core.jar.dir}/${ant.project.name}.jar"
-	     basedir="${core.build.dir}"
-	     includes="**/*.class">
-            <manifest>
-                <attribute name="Main-Class" value="MKAgent.Main"/>
-            </manifest>
-        </jar>
     </target>
 
 </project>

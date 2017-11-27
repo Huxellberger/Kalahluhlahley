@@ -6,7 +6,7 @@ Java bot to play the game of Kalah using the _Kalah Game Engine_ included.
 
 to build the agent simply use the command:
 
-`ant jar`
+`ant test`
 
 This will create a Java Executable that you can then run against the reference agent with:
 

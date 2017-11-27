@@ -2,8 +2,8 @@ import org.junit.Test;
 
 public class MainTest  
 {
-    @Test	
-    public void testNothing() 
+    @Test
+    public void doNothing()
     {
     }
 }

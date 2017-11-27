@@ -15,6 +15,7 @@ public class Main
      * Input from the game engine.
      */
     private static Reader input = new BufferedReader(new InputStreamReader(System.in));
+    private static AgentInterface agent = new MonteCarloAgent();
 
     /**
      * Sends a message to the game engine.
@@ -64,14 +65,15 @@ public class Main
 		switch(Protocol.getMessageType(receivedMessage))
 		{
 	          case START:
+		      sendMsg(Main.agent.respondToStart(receivedMessage));
+		      break;
 	          case STATE:
-		      // System.out.println(receivedMessage);
+		      sendMsg(Main.agent.respondToState(receivedMessage));
 		      break;
 	          case END:
 		      playingGame = false;
 	          default:
 	        }
-	        // sendMsg();
 	    }
 	    catch(Exception exception)
 	    {
