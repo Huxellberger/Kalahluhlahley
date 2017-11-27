@@ -15,7 +15,8 @@ public class Main
      * Input from the game engine.
      */
     private static Reader input = new BufferedReader(new InputStreamReader(System.in));
-    private static AgentInterface agent = new MonteCarloAgent();
+    // private static AgentInterface agent = new MonteCarloAgent();
+    private static AgentInterface agent = new RandomMKAgent();
 
     /**
      * Sends a message to the game engine.
