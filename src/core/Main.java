@@ -26,8 +26,9 @@ public class Main
      * Sends a message to the game engine.
      * @param msg The message.
      */
-    public static void sendMsg (String msg)
+    public static void sendMsg (String msg) throws IOException
     {
+	writer.write(msg);
     	System.out.print(msg);
     	System.out.flush();
     }
@@ -73,12 +74,10 @@ public class Main
 		{
 	          case START:
 		      response = Main.agent.respondToStart(receivedMessage);
-		      writer.write(response);
 		      sendMsg(response);
 		      break;
 	          case STATE:
 		      response = Main.agent.respondToState(receivedMessage);
-		      writer.write(response);
 		      sendMsg(response);
 		      break;
 	          case END:
