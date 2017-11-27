@@ -1,6 +1,8 @@
 package MKAgent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.EOFException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -15,15 +17,18 @@ public class Main
      * Input from the game engine.
      */
     private static Reader input = new BufferedReader(new InputStreamReader(System.in));
-    //private static AgentInterface agent = new MonteCarloAgent();
+    private static BufferedWriter writer;
+
+    // private static AgentInterface agent = new MonteCarloAgent();
     private static AgentInterface agent = new RandomMKAgent();
 
     /**
      * Sends a message to the game engine.
      * @param msg The message.
      */
-    public static void sendMsg (String msg)
+    public static void sendMsg (String msg) throws IOException
     {
+	writer.write(msg);
     	System.out.print(msg);
     	System.out.flush();
     }
@@ -58,29 +63,34 @@ public class Main
     public static void main(String[] args)
     {
 	boolean playingGame = true;
-	while (playingGame)
+	try
 	{
-	    try
-	    {
+            writer = new BufferedWriter(new FileWriter("log.txt"));
+	    while (playingGame)
+	    {   
 		String receivedMessage = recvMsg();
+		String response = "empty\n";
 		switch(Protocol.getMessageType(receivedMessage))
 		{
 	          case START:
-		      sendMsg(Main.agent.respondToStart(receivedMessage));
+		      response = Main.agent.respondToStart(receivedMessage);
+		      sendMsg(response);
 		      break;
 	          case STATE:
-		      sendMsg(Main.agent.respondToState(receivedMessage));
+		      response = Main.agent.respondToState(receivedMessage);
+		      sendMsg(response);
 		      break;
 	          case END:
 		      playingGame = false;
 	          default:
 	        }
 	    }
-	    catch(Exception exception)
-	    {
-		playingGame = false;
-		System.out.println("Something went wrong, exiting.");
-	    }
+	    writer.close();
+	}
+	catch(Exception exception)
+	{
+	    playingGame = false;
+	    System.out.println("Something went wrong, exiting.");
 	}
     }
 }

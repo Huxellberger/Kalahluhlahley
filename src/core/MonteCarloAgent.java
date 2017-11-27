@@ -38,13 +38,13 @@ public class MonteCarloAgent implements AgentInterface
     public String respondToState(String receivedStateMessage)
     {
 	try
-	    {
-		Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
-	    }
+	{
+	    Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+	}
 	catch (Exception e)
-	    {
-		System.out.println("Bad State Message!");
-	    }
+	{
+	    System.out.println("Bad State Message!");
+	}
 	
 	return getFirstValidMove();
     }
