@@ -1,6 +1,8 @@
 package MKAgent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.EOFException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -16,6 +18,7 @@ public class Main
      */
     private static Reader input = new BufferedReader(new InputStreamReader(System.in));
     // private static AgentInterface agent = new MonteCarloAgent();
+    private static BufferedWriter writer;
     private static AgentInterface agent = new RandomMKAgent();
 
     /**
@@ -58,29 +61,36 @@ public class Main
     public static void main(String[] args)
     {
 	boolean playingGame = true;
-	while (playingGame)
+	try
 	{
-	    try
-	    {
+            writer = new BufferedWriter(new FileWriter("log.txt"));
+	    while (playingGame)
+	    {   
 		String receivedMessage = recvMsg();
+		String response = "empty\n";
 		switch(Protocol.getMessageType(receivedMessage))
 		{
 	          case START:
-		      sendMsg(Main.agent.respondToStart(receivedMessage));
+		      response = Main.agent.respondToStart(receivedMessage);
+		      writer.write(response);
+		      sendMsg(response);
 		      break;
 	          case STATE:
-		      sendMsg(Main.agent.respondToState(receivedMessage));
+		      response = Main.agent.respondToState(receivedMessage);
+		      writer.write(response);
+		      sendMsg(response);
 		      break;
 	          case END:
 		      playingGame = false;
 	          default:
 	        }
 	    }
-	    catch(Exception exception)
-	    {
-		playingGame = false;
-		System.out.println("Something went wrong, exiting.");
-	    }
+	    writer.close();
+	}
+	catch(Exception exception)
+	{
+	    playingGame = false;
+	    System.out.println("Something went wrong, exiting.");
 	}
     }
 }

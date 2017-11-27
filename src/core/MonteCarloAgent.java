@@ -21,7 +21,7 @@ public class MonteCarloAgent implements AgentInterface
 	}
 	catch (Exception e)
 	{
-	    System.out.println("Failed to read start message!");
+	    // System.out.println("Failed to read start message!");
 	    return getFirstValidMove();
 	}
 
@@ -43,7 +43,7 @@ public class MonteCarloAgent implements AgentInterface
 	    }
 	catch (Exception e)
 	    {
-		System.out.println("Bad State Message!");
+		// System.out.println("Bad State Message!");
 	    }
 	
 	return getFirstValidMove();
