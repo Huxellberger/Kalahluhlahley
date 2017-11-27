@@ -5,28 +5,26 @@ public class RandomMKAgent implements AgentInterface
   private Board currentBoard;
 
   public static final int HOLE_COUNT = 7;
-  public static final int START_SEED_COUNT = 7;
+  public static final int SEED_COUNT = 7;
 
   public RandomMKAgent()
   {
-    currentBoard = new Board(HOLE_COUNT, START_SEED_COUNT);
+    currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
   }
-
+  
   public String respondToStart(String receivedStartMessage)
   {
-    // True if South starts, false if North
     boolean isStarting = true;
     try
     {
       isStarting = Protocol.interpretStartMsg(receivedStartMessage);
     }
-    catch (InvalidMessageException e)
+    catch (Exception e)
     {
-      System.out.println("Failed to read start message! " + e);
+      System.out.println("Failed to read start message!");
       return getFirstValidMove();
     }
 
-    System.out.println("Are we starting? " + isStarting);
     if (!isStarting)
     {
       return Protocol.createSwapMsg();
@@ -36,7 +34,7 @@ public class RandomMKAgent implements AgentInterface
       return getFirstValidMove();
     }
   }
-
+  
   public String respondToState(String receivedStateMessage)
   {
     try
@@ -47,7 +45,7 @@ public class RandomMKAgent implements AgentInterface
     {
       System.out.println("Bad State Message!");
     }
-
+    
     return getFirstValidMove();
   }
 
