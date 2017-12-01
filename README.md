@@ -1,5 +1,7 @@
 # Kalahluhlahley
 
+[![Build Status](https://travis-ci.org/Huxellberger/Kalahluhlahley.svg?branch=master)](https://travis-ci.org/Huxellberger/Kalahluhlahley)
+
 Java bot to play the game of Kalah using the _Kalah Game Engine_ included.
 
 ## How to build our MKAgent
