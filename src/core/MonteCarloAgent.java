@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 	currentSide = Side.SOUTH;
     }
 
-    public Side GetSide()
+    public Side getCurrentSide()
     {
 	return currentSide;
     }
