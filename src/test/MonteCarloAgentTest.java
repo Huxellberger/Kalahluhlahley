@@ -43,7 +43,7 @@ public class MonteCarloAgentTest
     public void respondToState_OpponentSwaps_UpdatesCurrentSide()
     {
 	MonteCarloAgent testAgent = new MonteCarloAgent();
-	testAgent.respondToState("CHANGE;SWAP;OPP\n");
+	testAgent.respondToState("CHANGE;SWAP;0,9,9,9,9,9,8,1,8,7,7,7,7,7,0,1;OPP\n");
 	assertEquals(Side.NORTH, testAgent.getCurrentSide());
     }
 }
