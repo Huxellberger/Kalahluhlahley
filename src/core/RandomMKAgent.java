@@ -26,7 +26,6 @@ public class RandomMKAgent implements AgentInterface
     }
     catch (Exception e)
     {
-      System.out.println("Failed to read start message!");
       return getRandomValidMove();
     }
 
@@ -44,20 +43,19 @@ public class RandomMKAgent implements AgentInterface
   {
     try
     {
-      Protocol.MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
-      if (move.move == Protocol.SWAP_MOVE)
+      MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+      if (move.move == MoveTurn.SWAP_MOVE)
       {
         currentSide = Side.NORTH;
       }
       
       if (!move.again)
       {
-        return Protocol.NO_MOVE;
+        return MoveTurn.NO_MOVE;
       }
     }
     catch (Exception e)
     {
-      System.out.println("Bad State Message!");
     }
 
     return getRandomValidMove();
