@@ -69,7 +69,7 @@ public class Main
 	    while (playingGame)
 	    {   
 		String receivedMessage = recvMsg();
-		String response = Protocol.NO_MOVE;
+		String response = MoveTurn.NO_MOVE;
 
 		writer.write("received message:" + receivedMessage + "\n");
 		switch(Protocol.getMessageType(receivedMessage))
@@ -85,7 +85,7 @@ public class Main
 	          default:
 	        }
 		
-		if (!response.equals(Protocol.NO_MOVE))
+		if (!response.equals(MoveTurn.NO_MOVE))
 		{
 		    sendMsg(response);
 		}

@@ -13,6 +13,11 @@ public class MonteCarloAgent implements AgentInterface
 	currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
 	currentSide = Side.SOUTH;
     }
+
+    public Side GetSide()
+    {
+	return currentSide;
+    }
     
     public String respondToStart(String receivedStartMessage)
     {
@@ -41,15 +46,15 @@ public class MonteCarloAgent implements AgentInterface
     {
 	try
 	{
-	    Protocol.MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
-	    if (move.move == Protocol.SWAP_MOVE)
+	    MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+	    if (move.move == MoveTurn.SWAP_MOVE)
 	    {
 		currentSide = Side.NORTH;
 	    }
 	    
 	    if (!move.again)
 	    {
-		return Protocol.NO_MOVE;
+		return MoveTurn.NO_MOVE;
 	    }
 	}
 	catch (Exception e)

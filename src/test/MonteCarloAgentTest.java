@@ -24,7 +24,7 @@ public class MonteCarloAgentTest
     public void respondToState_DoesFirstValidMove()
     {
 	MonteCarloAgent testAgent = new MonteCarloAgent();
-	String response = testAgent.respondToState("CHANGE;2;1,2,3,4,5,6;OPP\n");
+	String response = testAgent.respondToState("CHANGE;1;0,9,9,9,9,9,8,1,8,7,7,7,7,7,0,1;YOU\n");
 	assertTrue(response.equals("MOVE;" + MonteCarloAgent.HOLE_COUNT + "\n" ));
     }
 }
