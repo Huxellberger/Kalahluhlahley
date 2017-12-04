@@ -1,5 +1,12 @@
 package MKAgent;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class MonteCarloAgent implements AgentInterface
 {
     private Board currentBoard;
@@ -7,6 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
+    public static final int EXECUTION_TIMEOUT = 14;
 
     public MonteCarloAgent()
     {
@@ -56,6 +64,13 @@ public class MonteCarloAgent implements AgentInterface
 	    {
 		return MoveTurn.NO_MOVE;
 	    }
+
+	    if (false)
+	    {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.invokeAll(Arrays.asList(new ExpansionTask()), EXECUTION_TIMEOUT, TimeUnit.SECONDS);
+		executor.shutdown();
+	    }
 	}
 	catch (Exception e)
 	{
@@ -72,14 +87,14 @@ public class MonteCarloAgent implements AgentInterface
 
     private int getFirstValidHole()
     {
-	for (int i = 1; i <= HOLE_COUNT; ++i)
+	for (int i = HOLE_COUNT; i >= 1; --i)
 	{
 	    if (Kalah.isLegalMove(currentBoard, new Move(currentSide, i)))
 	    {
 		return i;
 	    }
 	}
-	
+
 	return 1;
     }
 }
