@@ -20,7 +20,7 @@ public class Main
     private static BufferedWriter writer;
 
     // private static AgentInterface agent = new MonteCarloAgent();
-    private static AgentInterface agent = new RandomMKAgent();
+    private static AgentInterface agent = new BFSMKAgent();
 
     /**
      * Sends a message to the game engine.
