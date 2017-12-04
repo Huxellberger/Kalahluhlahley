@@ -20,7 +20,7 @@ public class Main
     private static BufferedWriter writer;
 
     // private static AgentInterface agent = new MonteCarloAgent();
-    private static AgentInterface agent = new RandomMKAgent();
+    private static AgentInterface agent = new MonteCarloAgent();
 
     /**
      * Sends a message to the game engine.
@@ -69,21 +69,26 @@ public class Main
 	    while (playingGame)
 	    {   
 		String receivedMessage = recvMsg();
-		String response = "empty\n";
+		String response = Protocol.NO_MOVE;
+
+		writer.write("received message:" + receivedMessage + "\n");
 		switch(Protocol.getMessageType(receivedMessage))
 		{
 	          case START:
 		      response = Main.agent.respondToStart(receivedMessage);
-		      sendMsg(response);
 		      break;
 	          case STATE:
 		      response = Main.agent.respondToState(receivedMessage);
-		      sendMsg(response);
 		      break;
 	          case END:
 		      playingGame = false;
 	          default:
 	        }
+		
+		if (!response.equals(Protocol.NO_MOVE))
+		{
+		    sendMsg(response);
+		}
 	    }
 	    writer.close();
 	}

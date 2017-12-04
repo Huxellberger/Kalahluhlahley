@@ -3,6 +3,7 @@ package MKAgent;
 public class MonteCarloAgent implements AgentInterface
 {
     private Board currentBoard;
+    private Side currentSide;
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
@@ -10,6 +11,7 @@ public class MonteCarloAgent implements AgentInterface
     public MonteCarloAgent()
     {
 	currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
+	currentSide = Side.SOUTH;
     }
     
     public String respondToStart(String receivedStartMessage)
@@ -39,7 +41,16 @@ public class MonteCarloAgent implements AgentInterface
     {
 	try
 	{
-	    Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+	    Protocol.MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+	    if (move.move == Protocol.SWAP_MOVE)
+	    {
+		currentSide = Side.NORTH;
+	    }
+	    
+	    if (!move.again)
+	    {
+		return Protocol.NO_MOVE;
+	    }
 	}
 	catch (Exception e)
 	{
@@ -58,7 +69,7 @@ public class MonteCarloAgent implements AgentInterface
     {
 	for (int i = HOLE_COUNT; HOLE_COUNT >= 1; --i)
 	{
-	    if (currentBoard.getSeeds(Side.NORTH, i) > 0)
+	    if (Kalah.isLegalMove(currentBoard, new Move(currentSide, i)))
 	    {
 		return i;
 	    }
