@@ -2,6 +2,10 @@ package MKAgent;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.EOFException;
+import java.io.FileWriter;
 
 public class BFSMKAgent implements AgentInterface
 {
@@ -11,13 +15,13 @@ public class BFSMKAgent implements AgentInterface
   public static final int HOLE_COUNT = 7;
   public static final int SEED_COUNT = 7;
 
+  private static BufferedWriter writer;
+
   public BFSMKAgent()
   {
     currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
     currentSide = Side.SOUTH;
   }
-
-  Tree bob;
 
   public String respondToStart(String receivedStartMessage)
   {
@@ -63,6 +67,12 @@ public class BFSMKAgent implements AgentInterface
     return getBestValidMove();
   }
 
+  private Board simulateBoardChange(Board currentBoard, int potIndex)
+  {
+    //TODO: simulate playing potIndex and return the new board state
+    return currentBoard;
+  }
+
   private String getBestValidMove()
   {
     return Protocol.createMoveMsg(getBestValidHole());
@@ -70,6 +80,21 @@ public class BFSMKAgent implements AgentInterface
 
   private int getBestValidHole()
   {
+    Node currentBoardNode = new Node(currentBoard);
+
+    currentBoardNode.addChild(simulateBoardChange(currentBoard, 1));
+
+    try
+    {
+      writer = new BufferedWriter(new FileWriter("boardtree.txt"));
+      writer.write(currentBoardNode.toString() + "\n");
+      writer.close();
+    }
+    catch(Exception exception)
+    {
+
+    }
+
     return 1;
   }
 }
