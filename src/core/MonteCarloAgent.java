@@ -72,12 +72,14 @@ public class MonteCarloAgent implements AgentInterface
 
     private int getFirstValidHole()
     {
-	for (int i = HOLE_COUNT; HOLE_COUNT >= 1; --i)
+	for (int i = 1; i <= HOLE_COUNT; ++i)
 	{
 	    if (Kalah.isLegalMove(currentBoard, new Move(currentSide, i)))
 	    {
 		return i;
 	    }
 	}
+	
+	return 1;
     }
 }
