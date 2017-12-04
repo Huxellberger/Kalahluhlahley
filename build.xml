@@ -23,8 +23,8 @@
     </target>
 
      <target name="jar" depends="compile">
-        <mkdir dir="${core.jar.dir}"/>
-        <jar destfile="${core.jar.dir}/${ant.project.name}.jar"
+         <mkdir dir="${core.jar.dir}"/>
+         <jar destfile="${core.jar.dir}/${ant.project.name}.jar"
 	     basedir="${core.build.dir}"
 	     includes="**/*.class">
             <manifest>
@@ -34,23 +34,23 @@
     </target>
 
     <target name="test-compile" depends="jar">
-      <mkdir dir="${test.build.dir}"/>
-      <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" includeantruntime="false">
-        <classpath refid="classpath.test"/>
-      </javac>
+	<mkdir dir="${test.build.dir}"/>
+	  <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" includeantruntime="false">
+            <classpath refid="classpath.test"/>
+	  </javac>
     </target>
 
     <target name="test" depends="test-compile">
-      <junit printsummary="on" haltonfailure="no" fork="true">
-        <classpath>
-          <path refid="classpath.test"/>
-          <pathelement location="${test.build.dir}"/>
-        </classpath>
-        <formatter type="brief" usefile="false" />
-        <batchtest>
+	<junit printsummary="on" haltonfailure="yes" fork="true">
+          <classpath>
+            <path refid="classpath.test"/>
+            <pathelement location="${test.build.dir}"/>
+          </classpath>
+          <formatter type="brief" usefile="false" />
+          <batchtest>
             <fileset dir="${test.build.dir}" includes="*Test*" />
-        </batchtest>
-      </junit>
+          </batchtest>
+	</junit>
     </target>
 
 </project>
