@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT = 14;
+    public static final float EXECUTION_TIMEOUT = 14.0f;
 
     public MonteCarloAgent()
     {
@@ -65,10 +65,15 @@ public class MonteCarloAgent implements AgentInterface
 		return MoveTurn.NO_MOVE;
 	    }
 
+	    // PLAN OF ACTION
+	    // For each possible move
+	    //   Submit an ExpansionTask 
+	    // Wait for tasks to complete and select one with highest win percentage 
+	    // We send the best move to the engine.
 	    if (false)
 	    {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		executor.invokeAll(Arrays.asList(new ExpansionTask()), EXECUTION_TIMEOUT, TimeUnit.SECONDS);
+		executor.submit(new ExpansionTask(currentBoard, 1, EXECUTION_TIMEOUT));
 		executor.shutdown();
 	    }
 	}
