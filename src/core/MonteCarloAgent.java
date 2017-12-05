@@ -2,9 +2,13 @@ package MKAgent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class MonteCarloAgent implements AgentInterface
@@ -65,16 +69,9 @@ public class MonteCarloAgent implements AgentInterface
 		return MoveTurn.NO_MOVE;
 	    }
 
-	    // PLAN OF ACTION
-	    // For each possible move
-	    //   Submit an ExpansionTask 
-	    // Wait for tasks to complete and select one with highest win percentage 
-	    // We send the best move to the engine.
 	    if (false)
 	    {
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		executor.submit(new ExpansionTask(currentBoard, 1, EXECUTION_TIMEOUT));
-		executor.shutdown();
+		return getMonteCarloSelectedResult();
 	    }
 	}
 	catch (Exception e)
@@ -101,5 +98,76 @@ public class MonteCarloAgent implements AgentInterface
 	}
 
 	return 1;
+    }
+
+    private String getMonteCarloSelectedResult() throws Exception
+    {
+	Vector<Integer> validMoves = getAllLegalMoves();
+
+	ExecutorService executor = Executors.newFixedThreadPool(validMoves.size());
+	Vector<Future<ExpansionTaskResult>> tasksInFlight = submitExpansionTasks(executor, validMoves);	
+
+	int bestMove = getBestMove(tasksInFlight);
+		
+	executor.shutdown();
+
+	return Protocol.createMoveMsg(bestMove);
+    }
+
+    private Vector<Integer> getAllLegalMoves()
+    {
+	Vector<Integer> validMoves = new Vector<Integer>();
+
+	// Find all possible valid moves
+	for (int possibleMove = 1; possibleMove <= HOLE_COUNT; ++possibleMove)
+	{
+	    if (Kalah.isLegalMove(currentBoard, new Move(currentSide, possibleMove)))
+	    {
+		validMoves.add(possibleMove);
+	    }
+	}
+
+	return validMoves;
+    }
+
+    private Vector<Future<ExpansionTaskResult>> submitExpansionTasks
+    (
+       ExecutorService inExecutor, 
+       Vector<Integer> inValidMoves
+    ) throws Exception
+    {
+	Vector<Future<ExpansionTaskResult>> taskResults = new Vector<Future<ExpansionTaskResult>>();
+
+	// Delegate tasks to montecarlo them all
+	for (Integer consideredMove : inValidMoves)
+	{
+	    taskResults.add(inExecutor.submit(
+	        new ExpansionTask
+		(
+		   currentBoard, 
+		   consideredMove, 
+		   EXECUTION_TIMEOUT
+		 )
+	    ));
+	}
+
+	return taskResults;
+    }
+
+    private int getBestMove(Vector<Future<ExpansionTaskResult>> inExpansions) throws Exception
+    {
+	ExpansionTaskResult currentBest = new ExpansionTaskResult(-1, -1.0f);
+	
+	// Find best result
+	for (Future<ExpansionTaskResult> result : inExpansions)
+	{
+	    ExpansionTaskResult newResult = result.get();
+	    if (newResult.getWinRate() > currentBest.getWinRate())
+	    {
+		currentBest = newResult; 
+	    }
+	 }
+
+	return currentBest.getStartingMove();
     }
 }
