@@ -12,24 +12,24 @@ import java.io.IOException;
 
 public class ExpansionTask implements Callable<ExpansionTaskResult>
 {
-  private static BufferedWriter writer;
+  private BufferedWriter writer;
 
   private Board startingBoard;
   private Board simulationBoard;
   private int startingMove;
-  private Side startingSide;
+  private Side playerSide;
   private int timeout;
-  private Side currentSide;
+  private Side nextSideToMove;
 
   public ExpansionTask(Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
   {
-   super();
-
-   startingBoard = inBoard.clone();
+   startingBoard = inBoard;
    simulationBoard = null;
-   startingSide = inSide;
+   playerSide = inSide;
+   nextSideToMove = playerSide;
+
    startingMove = inMove;
-   timeout = (int)inTimeout;
+   timeout = inTimeout;
  }
 
  private int getRandomLegalHole()
@@ -45,7 +45,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   int index = 0;
   int hole = holes.get(index);
 
-  while (!Kalah.isLegalMove(startingBoard, new Move(currentSide, hole)))
+  while (!Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, hole)))
   {
     if(index++ < 7)
       hole = holes.get(index);
@@ -71,69 +71,74 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   int wins = 0;
   int losses = 0;
+  int draws = 0;
 
-  currentSide = Side.SOUTH;
-  Side nextSideToMove = currentSide;
+  nextSideToMove = playerSide;
   Move nextMove = null;
 
   long startTimeMillis = System.currentTimeMillis();
   long currentTimeMillis = startTimeMillis;
+  long endTime = startTimeMillis + timeout;
 
-  long currentTime = System.currentTimeMillis();
-  
+
+  String result = "log" + currentTimeMillis + startingMove + ".txt";
+  writer = new BufferedWriter(new FileWriter(result));
 
   try
   {
-      //writer.write("yay we made it hooray");
-      long endTime = startTimeMillis + ((long)timeout * 1000);
-      //writer.write(currentTimeMillis + " " + endTime);
-      //writer.close();
-
       while (currentTimeMillis < endTime)
       {
+	  int totalGames = wins + losses + draws;
+	  String currentTimeAsString = "StartTime: " + currentTimeMillis + " EndTime: " + endTime + "Games Played: " + totalGames + "\n";
+	  writer.write("Current time is: " + currentTimeAsString);
+	  writer.flush();
 
         simulationBoard = startingBoard.clone();
-        nextMove = new Move(currentSide, startingMove);
+        nextMove = new Move(nextSideToMove, startingMove);
 
         if (Kalah.isLegalMove(simulationBoard, nextMove))
         {
-          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);
+	  KalahReturnResult startReturnResult =  Kalah.makeMove(simulationBoard, nextMove);
+          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove).nextMove;
+	  simulationBoard = startReturnResult.returnBoard;
         }
         else
         {
           return new ExpansionTaskResult(startingMove, 0.0f);
         }
-
+	
         while (!Kalah.gameOver(simulationBoard))
         {
-          String result = "log" + currentTime + ".txt";
-          writer = new BufferedWriter(new FileWriter(result));
-          writer.write("game has not ended yet");
-          writer.close(); 
-
+	  writer.write(simulationBoard.toString()); 
+	  writer.flush();
           int randomLegalHole = getRandomLegalHole();      
           nextMove = new Move(nextSideToMove, randomLegalHole);
-          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
-        } 
+	  KalahReturnResult returnResult = Kalah.makeMove(simulationBoard, nextMove);
+	  simulationBoard = returnResult.returnBoard;
+          nextSideToMove = returnResult.nextMove;          
+        }
+	writer.write("\nGame has ended\n");
 
-        if (simulationBoard.getSeedsInStore(Side.SOUTH) > simulationBoard.getSeedsInStore(Side.NORTH))
+        if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
         {
           wins++;
         }   
-        else if (simulationBoard.getSeedsInStore(Side.SOUTH) < simulationBoard.getSeedsInStore(Side.NORTH))
+        else if (simulationBoard.getSeedsInStore(playerSide) < simulationBoard.getSeedsInStore(playerSide.opposite()))
         {
           losses++;
         }
         else
         {
-          wins++;
-          losses++;
+	  draws++;
         }
 
         currentTimeMillis = System.currentTimeMillis();
     }  
-       
-      return new ExpansionTaskResult(startingMove, (float)(wins / (wins+losses) * 100));
+      
+      float winRate = (float)(((float)wins / (wins+losses+draws)) * 100);
+      writer.write("Wins: " + wins + " Losses: " + losses + " Draws: " + draws + " Final winrate: " + winRate + "\n");
+      writer.close();
+      return new ExpansionTaskResult(startingMove, winRate);
     }
   catch(Exception ex)
   {    

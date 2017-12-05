@@ -13,7 +13,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 100;
 
     public MonteCarloAgent()
     {
@@ -54,6 +54,7 @@ public class MonteCarloAgent implements AgentInterface
 	try
 	{
 	    MoveTurn move = Protocol.interpretStateMsg(receivedStateMessage, currentBoard);
+	    Main.writer.write(currentBoard.toString());
 	    if (move.move == MoveTurn.SWAP_MOVE)
 	    {
 		currentSide = Side.NORTH;
@@ -68,7 +69,6 @@ public class MonteCarloAgent implements AgentInterface
 	}
 	catch (Exception e)
 	{
-	    System.out.println("Bad State Message!");
 	}
 	
 	return getFirstValidMove();
@@ -136,7 +136,7 @@ public class MonteCarloAgent implements AgentInterface
 	    taskResults.add(inExecutor.submit(
 	        new ExpansionTask
 		(
-		   currentBoard, 
+		   currentBoard.clone(), 
 		   consideredMove,
 		   currentSide,
 		   EXECUTION_TIMEOUT_MILLIS
@@ -151,13 +151,21 @@ public class MonteCarloAgent implements AgentInterface
     {
 	ExpansionTaskResult currentBest = new ExpansionTaskResult(-1, -1.0f);
 	
+
+	Main.writer.write("\nCalculating best");
+	Main.writer.flush();
 	// Find best result
 	for (Future<ExpansionTaskResult> result : inExpansions)
 	{
+	    Main.writer.write("\nlooping");
+            Main.writer.flush();
 	    ExpansionTaskResult newResult = result.get();
+	    Main.writer.write("\nlooping up to here");
 	    if (newResult.getWinRate() > currentBest.getWinRate())
 	    {
 		currentBest = newResult; 
+		Main.writer.write("\nupdating best to be " + currentBest.getStartingMove() + " " + currentBest.getWinRate());
+		Main.writer.flush();
 	    }
 	 }
 	

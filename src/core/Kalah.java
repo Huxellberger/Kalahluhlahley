@@ -5,69 +5,6 @@ package MKAgent;
 public class Kalah
 {
     /**
-     * The board to play on.
-     */
-    private final Board board;
-
-    /**
-     * @param board The board to play on.
-     * @throws NullPointerException if "board" is null.
-     */
-    public Kalah (Board board) throws NullPointerException
-    {
-    	if (board == null)
-    		throw new NullPointerException();
-    	this.board = board;
-    }
-
-    /**
-     * @return The board this object operates on.
-     */
-    public Board getBoard ()
-    {
-		return board;
-    }
-
-    /**
-     * Checks whether a given move is legal on the underlying board. The move
-     * is not actually made.
-     * @param move The move to check.
-     * @return true if the move is legal, false if not.
-     */
-    public boolean isLegalMove (Move move)
-    {
-    	return isLegalMove(board, move);
-    }
-
-    /**
-     * Performs a move on the underlying board. The move must be legal. If
-     * the move terminates the game, the remaining seeds of the opponent are
-     * collected into their store as well (so that all holes are empty).<BR>
-     * The "notifyObservers()" method of the board is called with the "move"
-     * as argument.
-     * 
-     * @param move The move to make.
-     * @return The side who's turn it is after the move. Arbitrary if the
-     *         game is over.
-     * @see #isLegalMove(Move)
-     * @see #gameOver()
-     * @see java.util.Observable#notifyObservers(Object)
-     */
-    public Side makeMove (Move move)
-    {
-    	return makeMove(board, move);
-    }
-
-    /**
-     * Checks whether the game is over (based on the board).
-     * @return "true" if the game is over, "false" otherwise.
-     */
-    public boolean gameOver()
-    {
-    	return gameOver(board);
-    }
-
-    /**
      * Checks whether a given move is legal on a given board. The move
      * is not actually made.
      * @param board The board to check the move for.
@@ -96,7 +33,7 @@ public class Kalah
      * @see #gameOver(Board)
      * @see java.util.Observable#notifyObservers(Object)
      */
-    public static Side makeMove (Board board, Move move)
+    public static KalahReturnResult makeMove (Board board, Move move)
     {
 		/* from the documentation:
 		  "1. The counters are lifted from this hole and sown in anti-clockwise direction, starting
@@ -202,9 +139,9 @@ public class Kalah
 
     	// who's turn is it?
     	if (sowHole == 0)  // the store (implies (sowSide == move.getSide()))
-    		return move.getSide();  // move again
+	    return new KalahReturnResult(board, move.getSide());  // move again
     	else
-    		return move.getSide().opposite();
+	    return new KalahReturnResult(board, move.getSide().opposite());
     }
 
     /**

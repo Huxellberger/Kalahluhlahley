@@ -272,13 +272,13 @@ public class Board extends Observable implements Cloneable
 	{
 		StringBuilder boardString = new StringBuilder();
 
-		boardString.append(board[NORTH_ROW][0] + "----");
+		boardString.append(board[NORTH_ROW][0] + "\t");
 		for (int i=holes; i >= 1; i--)
 			boardString.append("  " + board[NORTH_ROW][i]);
-		boardString.append("\n    ");
+		boardString.append("\n\t    ");
 		for (int i=1; i <= holes; i++)
 			boardString.append(board[SOUTH_ROW][i] + "  ");
-		boardString.append("--  " + board[SOUTH_ROW][0] + "\n");
+		boardString.append("\t" + board[SOUTH_ROW][0] + "\n");
 
 		return boardString.toString();
 	}
