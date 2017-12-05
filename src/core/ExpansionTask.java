@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class ExpansionTask implements Callable<ExpansionTaskResult>
 {
-  private BufferedWriter writer;
+    // private BufferedWriter writer;
 
   private Board startingBoard;
   private Board simulationBoard;
@@ -81,18 +81,13 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   long endTime = startTimeMillis + timeout;
 
 
-  String result = "log" + currentTimeMillis + startingMove + ".txt";
-  writer = new BufferedWriter(new FileWriter(result));
+  // String result = "log" + currentTimeMillis + startingMove + ".txt";
+  // writer = new BufferedWriter(new FileWriter(result));
 
   try
   {
       while (currentTimeMillis < endTime)
       {
-	  int totalGames = wins + losses + draws;
-	  String currentTimeAsString = "StartTime: " + currentTimeMillis + " EndTime: " + endTime + "Games Played: " + totalGames + "\n";
-	  writer.write("Current time is: " + currentTimeAsString);
-	  writer.flush();
-
         simulationBoard = startingBoard.clone();
         nextMove = new Move(nextSideToMove, startingMove);
 
@@ -109,15 +104,12 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	
         while (!Kalah.gameOver(simulationBoard))
         {
-	  writer.write(simulationBoard.toString()); 
-	  writer.flush();
           int randomLegalHole = getRandomLegalHole();      
           nextMove = new Move(nextSideToMove, randomLegalHole);
 	  KalahReturnResult returnResult = Kalah.makeMove(simulationBoard, nextMove);
 	  simulationBoard = returnResult.returnBoard;
           nextSideToMove = returnResult.nextMove;          
         }
-	writer.write("\nGame has ended\n");
 
         if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
         {
@@ -136,16 +128,13 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
     }  
       
       float winRate = (float)(((float)wins / (wins+losses+draws)) * 100);
-      writer.write("Wins: " + wins + " Losses: " + losses + " Draws: " + draws + " Final winrate: " + winRate + "\n");
-      writer.close();
+      //  writer.write("Wins: " + wins + " Losses: " + losses + " Draws: " + draws + " Final winrate: " + winRate + "\n");
+      // writer.close();
       return new ExpansionTaskResult(startingMove, winRate);
     }
   catch(Exception ex)
   {    
-    writer.write("u fucked it" + ex + " " + wins + " " + losses);
-    writer.close();
-
-    return new ExpansionTaskResult(1, 1.0f);
+    return new ExpansionTaskResult(1, 0.3f);
   }
 }
 }
