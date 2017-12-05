@@ -33,7 +33,7 @@ public class Kalah
      * @see #gameOver(Board)
      * @see java.util.Observable#notifyObservers(Object)
      */
-    public static KalahReturnResult makeMove (Board board, Move move)
+    public static Side makeMove (Board board, Move move)
     {
 		/* from the documentation:
 		  "1. The counters are lifted from this hole and sown in anti-clockwise direction, starting
@@ -139,9 +139,9 @@ public class Kalah
 
     	// who's turn is it?
     	if (sowHole == 0)  // the store (implies (sowSide == move.getSide()))
-	    return new KalahReturnResult(board, move.getSide());  // move again
+	    return move.getSide();  // move again
     	else
-	    return new KalahReturnResult(board, move.getSide().opposite());
+	    return move.getSide().opposite();
     }
 
     /**

@@ -93,9 +93,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
         if (Kalah.isLegalMove(simulationBoard, nextMove))
         {
-	  KalahReturnResult startReturnResult =  Kalah.makeMove(simulationBoard, nextMove);
-          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove).nextMove;
-	  simulationBoard = startReturnResult.returnBoard;
+	  nextSideToMove =  Kalah.makeMove(simulationBoard, nextMove);
         }
         else
         {
@@ -106,9 +104,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
         {
           int randomLegalHole = getRandomLegalHole();      
           nextMove = new Move(nextSideToMove, randomLegalHole);
-	  KalahReturnResult returnResult = Kalah.makeMove(simulationBoard, nextMove);
-	  simulationBoard = returnResult.returnBoard;
-          nextSideToMove = returnResult.nextMove;          
+          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
         }
 
         if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
