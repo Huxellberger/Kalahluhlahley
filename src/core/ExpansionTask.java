@@ -5,8 +5,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.io.BufferedWriter;
+import java.io.EOFException;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class ExpansionTask implements Callable<ExpansionTaskResult>
 {
+  private static BufferedWriter writer;
+
   private Board startingBoard;
   private Board simulationBoard;
   private int startingMove;
@@ -22,7 +29,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
    simulationBoard = null;
    startingSide = inSide;
    startingMove = inMove;
-   timeout = inTimeout;
+   timeout = (int)inTimeout;
  }
 
  private int getRandomLegalHole()
@@ -69,37 +76,71 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   Side nextSideToMove = currentSide;
   Move nextMove = null;
 
-  while (timeout > 0)
+  long startTimeMillis = System.currentTimeMillis();
+  long currentTimeMillis = startTimeMillis;
+
+  long currentTime = System.currentTimeMillis();
+  
+
+  try
   {
-    simulationBoard = startingBoard.clone();
-    nextMove = new Move(currentSide, startingMove);
+      //writer.write("yay we made it hooray");
+      long endTime = startTimeMillis + ((long)timeout * 1000);
+      //writer.write(currentTimeMillis + " " + endTime);
+      //writer.close();
 
-    if (Kalah.isLegalMove(simulationBoard, nextMove))
-    {
-      nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);
-    }
-    else
-    {
-      return new ExpansionTaskResult(startingMove, 0.0f);
-    }
+      while (currentTimeMillis < endTime)
+      {
 
-    while (!Kalah.gameOver(simulationBoard))
-    {
-      int randomLegalHole = getRandomLegalHole();      
-      nextMove = new Move(nextSideToMove, randomLegalHole);
-      nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);
-    } 
+        simulationBoard = startingBoard.clone();
+        nextMove = new Move(currentSide, startingMove);
 
-    if (simulationBoard.getSeedsInStore(Side.SOUTH) > simulationBoard.getSeedsInStore(Side.NORTH))
-    {
-      wins++;
-    }   
-    else if (simulationBoard.getSeedsInStore(Side.SOUTH) < simulationBoard.getSeedsInStore(Side.NORTH))
-    {
-      losses++;
+        if (Kalah.isLegalMove(simulationBoard, nextMove))
+        {
+          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);
+        }
+        else
+        {
+          return new ExpansionTaskResult(startingMove, 0.0f);
+        }
+
+        while (!Kalah.gameOver(simulationBoard))
+        {
+          String result = "log" + currentTime + ".txt";
+          writer = new BufferedWriter(new FileWriter(result));
+          writer.write("game has not ended yet");
+          writer.close(); 
+
+          int randomLegalHole = getRandomLegalHole();      
+          nextMove = new Move(nextSideToMove, randomLegalHole);
+          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
+        } 
+
+        if (simulationBoard.getSeedsInStore(Side.SOUTH) > simulationBoard.getSeedsInStore(Side.NORTH))
+        {
+          wins++;
+        }   
+        else if (simulationBoard.getSeedsInStore(Side.SOUTH) < simulationBoard.getSeedsInStore(Side.NORTH))
+        {
+          losses++;
+        }
+        else
+        {
+          wins++;
+          losses++;
+        }
+
+        currentTimeMillis = System.currentTimeMillis();
+    }  
+       
+      return new ExpansionTaskResult(startingMove, (float)(wins / (wins+losses) * 100));
     }
+  catch(Exception ex)
+  {    
+    writer.write("u fucked it" + ex + " " + wins + " " + losses);
+    writer.close();
+
+    return new ExpansionTaskResult(1, 1.0f);
   }
-
-  return new ExpansionTaskResult(startingMove, (float)(wins / losses * 100));
- }
+}
 }
