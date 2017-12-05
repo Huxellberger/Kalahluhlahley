@@ -13,7 +13,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final float EXECUTION_TIMEOUT = 5.0f;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
 
     public MonteCarloAgent()
     {
@@ -137,8 +137,9 @@ public class MonteCarloAgent implements AgentInterface
 	        new ExpansionTask
 		(
 		   currentBoard, 
-		   consideredMove, 
-		   EXECUTION_TIMEOUT
+		   consideredMove,
+		   currentSide,
+		   EXECUTION_TIMEOUT_MILLIS
 		 )
 	    ));
 	}
@@ -159,7 +160,7 @@ public class MonteCarloAgent implements AgentInterface
 		currentBest = newResult; 
 	    }
 	 }
-
+	
 	return currentBest.getStartingMove();
     }
 }

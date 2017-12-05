@@ -10,15 +10,17 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Board startingBoard;
   private Board simulationBoard;
   private int startingMove;
-  private float timeout;
+  private Side startingSide;
+  private int timeout;
   private Side currentSide;
 
-  public ExpansionTask(Board inBoard, int inMove, float inTimeout) throws CloneNotSupportedException
+  public ExpansionTask(Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
   {
    super();
 
    startingBoard = inBoard.clone();
    simulationBoard = null;
+   startingSide = inSide;
    startingMove = inMove;
    timeout = inTimeout;
  }
