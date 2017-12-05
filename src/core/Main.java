@@ -1,4 +1,5 @@
 package MKAgent;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -19,8 +20,7 @@ public class Main
     private static Reader input = new BufferedReader(new InputStreamReader(System.in));
     private static BufferedWriter writer;
 
-    // private static AgentInterface agent = new MonteCarloAgent();
-    private static AgentInterface agent = new BFSMKAgent();
+    private static AgentInterface agent = new MonteCarloAgent();
 
     /**
      * Sends a message to the game engine.

@@ -13,7 +13,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final float EXECUTION_TIMEOUT = 14.0f;
+    public static final float EXECUTION_TIMEOUT = 5.0f;
 
     public MonteCarloAgent()
     {
@@ -64,10 +64,7 @@ public class MonteCarloAgent implements AgentInterface
 		return MoveTurn.NO_MOVE;
 	    }
 
-	    if (false)
-	    {
-		return getMonteCarloSelectedResult();
-	    }
+	    return getMonteCarloSelectedResult();
 	}
 	catch (Exception e)
 	{
