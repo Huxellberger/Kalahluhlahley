@@ -12,8 +12,6 @@ import java.io.IOException;
 
 public class ExpansionTask implements Callable<ExpansionTaskResult>
 {
-    // private BufferedWriter writer;
-
   private Board startingBoard;
   private Board simulationBoard;
   private int startingMove;
@@ -56,7 +54,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   return hole;
  }
 
- public ExpansionTaskResult call() throws Exception
+ public ExpansionTaskResult call()
  {
 	// Called by the executor service when we submit the task.
 	// This task should run until the timeout is exceeded, at which point it will return
@@ -80,25 +78,22 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   long currentTimeMillis = startTimeMillis;
   long endTime = startTimeMillis + timeout;
 
+  nextMove = new Move(nextSideToMove, startingMove);
 
-  // String result = "log" + currentTimeMillis + startingMove + ".txt";
-  // writer = new BufferedWriter(new FileWriter(result));
+  if (Kalah.isLegalMove(startingBoard, nextMove))
+  {
+    nextSideToMove =  Kalah.makeMove(startingBoard, nextMove);
+  }
+  else
+  {
+    return new ExpansionTaskResult(startingMove,-1.0f);
+  }
 
   try
   {
       while (currentTimeMillis < endTime)
       {
-        simulationBoard = startingBoard.clone();
-        nextMove = new Move(nextSideToMove, startingMove);
-
-        if (Kalah.isLegalMove(simulationBoard, nextMove))
-        {
-	  nextSideToMove =  Kalah.makeMove(simulationBoard, nextMove);
-        }
-        else
-        {
-          return new ExpansionTaskResult(startingMove, 0.0f);
-        }
+        simulationBoard = startingBoard.clone();      
 	
         while (!Kalah.gameOver(simulationBoard))
         {
@@ -124,8 +119,6 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
     }  
       
       float winRate = (float)(((float)wins / (wins+losses+draws)) * 100);
-      //  writer.write("Wins: " + wins + " Losses: " + losses + " Draws: " + draws + " Final winrate: " + winRate + "\n");
-      // writer.close();
       return new ExpansionTaskResult(startingMove, winRate);
     }
   catch(Exception ex)
