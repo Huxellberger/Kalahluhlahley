@@ -16,6 +16,6 @@ public class SimpleTask implements Callable<ExpansionTaskResult>
     public ExpansionTaskResult call() throws Exception
     {
 	Thread.sleep(timeout);
-	return new ExpansionTaskResult(startingMove, 1.0f);
+	return new ExpansionTaskResult(startingMove, new MonteCarloData(-1));
     }
 }

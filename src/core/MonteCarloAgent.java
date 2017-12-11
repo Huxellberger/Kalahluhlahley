@@ -10,15 +10,17 @@ public class MonteCarloAgent implements AgentInterface
 {
     private Board currentBoard;
     private Side currentSide;
+    private Node<MonteCarloData> currentTree;
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 2500;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 1500;
 
     public MonteCarloAgent()
     {
 	currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
 	currentSide = Side.SOUTH;
+	currentTree = new Node<MonteCarloData>(new MonteCarloData(-1));
     }
 
     public Side getCurrentSide()
@@ -132,9 +134,18 @@ public class MonteCarloAgent implements AgentInterface
 	// Delegate tasks to montecarlo them all
 	for (Integer consideredMove : inValidMoves)
 	{
+	    Node<MonteCarloData> child = getChildForMove(consideredMove);
+
+	    if (child == null)
+	    {
+		currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(consideredMove)));
+		child = currentTree.children.get(currentTree.children.size() - 1);
+	    }
+
 	    taskResults.add(inExecutor.submit(
 	        new ExpansionTask
 		(
+		   child,
 		   currentBoard.clone(), 
 		   consideredMove,
 		   currentSide,
@@ -147,19 +158,40 @@ public class MonteCarloAgent implements AgentInterface
     }
 
     private int getBestMove(Vector<Future<ExpansionTaskResult>> inExpansions) throws Exception
-    {
-	ExpansionTaskResult currentBest = new ExpansionTaskResult(-1, -1.0f);
-	
+    {	
 	// Find best result
 	for (Future<ExpansionTaskResult> result : inExpansions)
 	{
 	    ExpansionTaskResult newResult = result.get();
-	    if (newResult.getWinRate() > currentBest.getWinRate())
+	    currentTree.data.addResults(newResult.getData().getWins(), newResult.getData().getMatchesPlayed());
+	}
+
+	int currentBestMove = -1;
+	double bestConfidenceBound = -1;
+
+	for (Node<MonteCarloData> currentChild : currentTree.children)
+	{
+	    double newConfidenceBound = currentChild.data.getUpperConfidenceBound(currentTree.data.getMatchesPlayed());
+	    if (newConfidenceBound > bestConfidenceBound)
 	    {
-		currentBest = newResult; 
+		bestConfidenceBound = newConfidenceBound;
+		currentBestMove = currentChild.data.Move;
 	    }
-	 }
+	}
 	
-	return currentBest.getStartingMove();
+	return currentBestMove;
+    }
+
+    private Node<MonteCarloData> getChildForMove(int inMove)
+    {
+	for (Node<MonteCarloData> currentChild : currentTree.children)
+	{
+	    if (currentChild.data.Move == inMove)
+	    {
+		return currentChild;
+	    }
+	}
+
+	return null;
     }
 }

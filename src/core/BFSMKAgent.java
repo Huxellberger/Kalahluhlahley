@@ -82,7 +82,7 @@ public class BFSMKAgent implements AgentInterface
   {
     Node currentBoardNode = new Node(currentBoard);
 
-    currentBoardNode.addChild(simulateBoardChange(currentBoard, 1));
+    // currentBoardNode.addChild(simulateBoardChange(currentBoard, 1));
 
     try
     {

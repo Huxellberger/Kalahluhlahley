@@ -3,12 +3,12 @@ package MKAgent;
 public class ExpansionTaskResult
 {
     private int startingMove;
-    private float winRate;
+    private MonteCarloData data;
 
-    public ExpansionTaskResult(int inMove, float inWinRate)
+    public ExpansionTaskResult(int inMove, MonteCarloData inData)
     {
 	startingMove = inMove;
-	winRate = inWinRate;
+	data = inData;
     }
 
     public int getStartingMove()
@@ -16,8 +16,8 @@ public class ExpansionTaskResult
 	return startingMove;
     }
 
-    public float getWinRate()
+    public MonteCarloData getData()
     {
-	return winRate;
+	return data;
     }
 }

@@ -87,13 +87,18 @@ public class Board extends Observable implements Cloneable
      */
     public Board (Board original)
     {
-    	holes = original.holes;
-    	board = new int[2][holes+1];
+	holes = original.holes;
+	board = new int[2][holes+1];
 
+	setBoard(original);
+    }
+
+    public void setBoard(Board original)
+    { 
     	for (int i=0; i <= holes; i++)
     	{
-    		board[NORTH_ROW][i] = original.board[NORTH_ROW][i];
-    		board[SOUTH_ROW][i] = original.board[SOUTH_ROW][i];
+	    board[NORTH_ROW][i] = original.board[NORTH_ROW][i];
+    	    board[SOUTH_ROW][i] = original.board[SOUTH_ROW][i];
     	}
     }
 

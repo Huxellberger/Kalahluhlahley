@@ -18,13 +18,17 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side playerSide;
   private int timeout;
   private Side nextSideToMove;
+  private Node<MonteCarloData> tree;
+  private Node<MonteCarloData> currentNode;
 
-  public ExpansionTask(Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
+  public ExpansionTask(Node<MonteCarloData> inRoot, Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
   {
    startingBoard = inBoard;
-   simulationBoard = null;
+   simulationBoard = startingBoard.clone();
    playerSide = inSide;
    nextSideToMove = playerSide;
+   tree = inRoot;
+   currentNode = tree;
 
    startingMove = inMove;
    timeout = inTimeout;
@@ -67,10 +71,6 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	//   if we win add to total wins, lose add to total losses.
 	// work out the average win% and return new ExpansionTaskResult(startingMove, win%);
 
-  int wins = 0;
-  int losses = 0;
-  int draws = 0;
-
   nextSideToMove = playerSide;
   Move nextMove = null;
 
@@ -86,44 +86,117 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   }
   else
   {
-    return new ExpansionTaskResult(startingMove,-1.0f);
+    return new ExpansionTaskResult(startingMove,tree.data);
   }
 
   try
   {
       while (currentTimeMillis < endTime)
       {
-        simulationBoard = startingBoard.clone();      
+	simulationBoard.setBoard(startingBoard);  
+
+	int chosenMove = selection();
+	expansion(chosenMove);
+	SimulationResult newResult = simulation();
+	backTrace(newResult);
 	
-        while (!Kalah.gameOver(simulationBoard))
-        {
-          int randomLegalHole = getRandomLegalHole();      
-          nextMove = new Move(nextSideToMove, randomLegalHole);
-          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
-        }
-
-        if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
-        {
-          wins++;
-        }   
-        else if (simulationBoard.getSeedsInStore(playerSide) < simulationBoard.getSeedsInStore(playerSide.opposite()))
-        {
-          losses++;
-        }
-        else
-        {
-	  draws++;
-        }
-
         currentTimeMillis = System.currentTimeMillis();
-    }  
+      }  
       
-      float winRate = (float)(((float)wins / (wins+losses+draws)) * 100);
-      return new ExpansionTaskResult(startingMove, winRate);
+      return new ExpansionTaskResult(startingMove, tree.data);
     }
   catch(Exception ex)
   {    
-    return new ExpansionTaskResult(1, 0.3f);
+    return new ExpansionTaskResult(1, tree.data);
   }
 }
+
+ private int selection()
+ {
+     int unplayedMove = getLegalUnplayedMove();
+     // Find best unvisited node
+     while (unplayedMove == -1)
+     {
+	 Node<MonteCarloData> highestConfidenceBoundChild = null;
+	 double highestConfidenceBound = -1.0;
+
+	 for (Node<MonteCarloData> currentChild : currentNode.children)
+	 {
+	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
+	     if ( currentConfidenceBound > highestConfidenceBound)
+	     {
+		 highestConfidenceBoundChild = currentChild;
+		 highestConfidenceBound = currentConfidenceBound;
+	     }
+	 }
+
+	 currentNode = highestConfidenceBoundChild;
+	 nextSideToMove = Kalah.makeMove(simulationBoard, new Move(nextSideToMove, currentNode.data.Move));
+
+	 unplayedMove = getLegalUnplayedMove();
+     }
+
+     return unplayedMove;
+ }
+
+ private int getLegalUnplayedMove()
+ {
+     if (currentNode.children.size() < MonteCarloAgent.HOLE_COUNT)
+     {
+	 for (int i = currentNode.children.size(); i <= MonteCarloAgent.HOLE_COUNT;  ++i)
+	 {
+	     if (Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, i)))
+	     {
+		 return i;
+	     }
+	 } 
+     }
+     
+     return -1;
+ }
+
+ private SimulationResult simulation()
+ {
+      while (!Kalah.gameOver(simulationBoard))
+      {
+          int randomLegalHole = getRandomLegalHole();      
+          Move nextMove = new Move(nextSideToMove, randomLegalHole);
+          nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
+      }
+
+      if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
+      {
+	  return SimulationResult.Win;
+      }   
+      else 
+      {
+	  return SimulationResult.Loss;
+      }
+ }
+
+ private void expansion(int newNode)
+ {
+     currentNode.children.add(new Node<MonteCarloData>(new MonteCarloData(newNode)));
+
+     for (int i = 0; i < currentNode.children.size(); ++i)
+     {
+	 if (currentNode.children.get(i).data.Move == newNode)
+	 {
+	     currentNode = currentNode.children.get(i);
+	     nextSideToMove = Kalah.makeMove(simulationBoard, new Move(nextSideToMove, newNode));
+
+	     return;
+	 }
+     }
+ }
+
+ private void backTrace(SimulationResult inResult)
+ {
+     while (currentNode != tree)
+     {
+	 currentNode.data.update(inResult);
+	 currentNode = currentNode.parent;
+     }
+     tree.data.update(inResult);
+ }
 }

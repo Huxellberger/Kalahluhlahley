@@ -12,19 +12,13 @@ public class Node<T> {
     children = new ArrayList<Node<T>>();
   }
 
-  private T data;
-  private Node<T> parent;
-  private List<Node<T>> children;
+  public T data;
+  public Node<T> parent;
+  public List<Node<T>> children;
 
   public List<Node<T>> getChildren()
   {
     return children;
-  }
-
-  public void addChild(Board board)
-  {
-    Node newChild = new Node(board);
-    children.add(newChild);
   }
 
   public String toString()

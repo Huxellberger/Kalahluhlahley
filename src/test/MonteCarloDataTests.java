@@ -9,7 +9,7 @@ public class MonteCarloDataTests
     @Test
     public void Creation_WinsAndMatchesPlayedIsZero()
     {
-	MonteCarloData testData = new MonteCarloData();
+	MonteCarloData testData = new MonteCarloData(-1);
 	assertEquals(0, testData.getWins());
 	assertEquals(0, testData.getMatchesPlayed());
     }
@@ -17,7 +17,7 @@ public class MonteCarloDataTests
     @Test
     public void Update_Win_AddsExpectedWinsAndMatchesPlayed()
     {	
-	MonteCarloData testData = new MonteCarloData();
+	MonteCarloData testData = new MonteCarloData(-1);
 	testData.update(SimulationResult.Win);
 	assertEquals(1, testData.getWins());
 	assertEquals(1, testData.getMatchesPlayed());
@@ -26,7 +26,7 @@ public class MonteCarloDataTests
     @Test
     public void Update_Loss_AddsExpectedMatchesPlayed()
     {	
-	MonteCarloData testData = new MonteCarloData();
+	MonteCarloData testData = new MonteCarloData(-1);
 	testData.update(SimulationResult.Loss);
 	assertEquals(0, testData.getWins());
 	assertEquals(1, testData.getMatchesPlayed());
