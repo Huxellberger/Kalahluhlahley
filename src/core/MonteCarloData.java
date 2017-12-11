@@ -38,6 +38,11 @@ public class MonteCarloData
 
     public double getUpperConfidenceBound(int inTotalMatches)
     {
+	if (inTotalMatches == 0 || matchesPlayed == 0)
+	{
+	    return 0.0;
+	}
+
 	return wins/matchesPlayed + Math.sqrt((2 * Math.log(matchesPlayed)) /inTotalMatches);
     }
 
