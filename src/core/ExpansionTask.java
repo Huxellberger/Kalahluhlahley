@@ -4,6 +4,7 @@ import java.util.concurrent.Callable;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -20,6 +21,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side nextSideToMove;
   private Node<MonteCarloData> tree;
   private Node<MonteCarloData> currentNode;
+  private BufferedWriter writer;
 
   public ExpansionTask(Node<MonteCarloData> inRoot, Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
   {
@@ -91,6 +93,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   try
   {
+      writer = new BufferedWriter(new FileWriter(currentTimeMillis + "-" + startingMove + ".txt"));
+      writer.write("\nBegin tree operation!");
+      writer.flush();
       while (currentTimeMillis < endTime)
       {
 	simulationBoard.setBoard(startingBoard);  
@@ -102,6 +107,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	
         currentTimeMillis = System.currentTimeMillis();
       }  
+
+      writer.close();
       
       return new ExpansionTaskResult(startingMove, tree.data);
     }
@@ -111,17 +118,21 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   }
 }
 
- private int selection()
+ private int selection() throws IOException
  {
      int unplayedMove = getLegalUnplayedMove();
      // Find best unvisited node
      while (unplayedMove == -1)
      {
+	 writer.write("\nUnplayed node does not exist!");
+	 writer.flush();
 	 Node<MonteCarloData> highestConfidenceBoundChild = null;
 	 double highestConfidenceBound = -1.0;
 
 	 for (Node<MonteCarloData> currentChild : currentNode.children)
 	 {
+	     writer.write("\nCurrentMove:" + currentChild.data.Move);
+	     writer.flush();
 	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
 	     if ( currentConfidenceBound > highestConfidenceBound)
 	     {
@@ -139,20 +150,43 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      return unplayedMove;
  }
 
- private int getLegalUnplayedMove()
+ private int getLegalUnplayedMove() throws IOException
  {
+     writer.write("Try to find legal unplayed move!");
+     writer.flush();
      if (currentNode.children.size() < MonteCarloAgent.HOLE_COUNT)
      {
-	 for (int i = currentNode.children.size(); i <= MonteCarloAgent.HOLE_COUNT;  ++i)
+	 Vector<Integer> alreadySelectedMoves = new Vector<Integer>();
+	 for (Node<MonteCarloData> currentChild : currentNode.children)
 	 {
-	     if (Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, i)))
+	     alreadySelectedMoves.add(currentChild.data.Move);
+	 }
+
+	 for (int i = 1; i <= MonteCarloAgent.HOLE_COUNT;  ++i)
+	 {
+	     if (Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, i)) && !containsMove(i, alreadySelectedMoves))
 	     {
+		 writer.write("\nFound unplayed move: " + i);
+		 writer.flush();
 		 return i;
 	     }
 	 } 
      }
      
      return -1;
+ }
+
+ private boolean containsMove(int inMove, Vector<Integer> inExistingMoves)
+ {
+     for (int currentChild : inExistingMoves)
+     {
+	 if (currentChild == inMove)
+	 {
+	     return true;
+	 }
+     }
+
+     return false;
  }
 
  private SimulationResult simulation()
