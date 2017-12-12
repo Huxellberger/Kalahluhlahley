@@ -14,13 +14,13 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 1500;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
 
     public MonteCarloAgent()
     {
 	currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
 	currentSide = Side.SOUTH;
-	currentTree = new Node<MonteCarloData>(new MonteCarloData(-1));
+	currentTree = new Node<MonteCarloData>(new MonteCarloData(-1), null);
     }
 
     public Side getCurrentSide()
@@ -60,11 +60,31 @@ public class MonteCarloAgent implements AgentInterface
 	    {
 		currentSide = Side.NORTH;
 	    }
+
+	    boolean foundChild = false;
+	    for (Node<MonteCarloData> currentChild : currentTree.children)
+	    {
+		if (currentChild.data.Move == move.move)
+		{
+		    foundChild = true;
+		    currentTree = currentChild;
+		}
+	    }
+
+	    currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(move.move), currentTree));
+
+	    for (Node<MonteCarloData> currentChild : currentTree.children)
+	    {
+		if (currentChild.data.Move == move.move)
+		{
+		    currentTree = currentChild;
+		}
+	    }
 	    
 	    if (!move.again)
 	    {
 		return MoveTurn.NO_MOVE;
-	    }
+	    }  
 
 	    return getMonteCarloSelectedResult();
 	}
@@ -104,6 +124,14 @@ public class MonteCarloAgent implements AgentInterface
 		
 	executor.shutdown();
 
+	for (Node<MonteCarloData> currentChild: currentTree.children)
+	{
+	    if (currentChild.data.Move == bestMove)
+	    {
+		currentTree = currentChild;
+	    }
+	}
+
 	return Protocol.createMoveMsg(bestMove);
     }
 
@@ -138,7 +166,7 @@ public class MonteCarloAgent implements AgentInterface
 
 	    if (child == null)
 	    {
-		currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(consideredMove)));
+		currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(consideredMove), currentTree));
 		child = currentTree.children.get(currentTree.children.size() - 1);
 	    }
 
@@ -176,18 +204,21 @@ public class MonteCarloAgent implements AgentInterface
 	    {
 		bestConfidenceBound = newConfidenceBound;
 		currentBestMove = currentChild.data.Move;
+		Main.writer.write("Best move is now " + currentBestMove + "\n");
 	    }
 	}
 	
 	return currentBestMove;
     }
 
-    private Node<MonteCarloData> getChildForMove(int inMove)
+    private Node<MonteCarloData> getChildForMove(int inMove) throws Exception
     {
 	for (Node<MonteCarloData> currentChild : currentTree.children)
 	{
 	    if (currentChild.data.Move == inMove)
 	    {
+		Main.writer.write("Getting Child node " + currentChild.data.Move + "\n");
+		Main.writer.flush();
 		return currentChild;
 	    }
 	}

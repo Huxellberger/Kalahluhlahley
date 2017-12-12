@@ -88,17 +88,6 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
  public ExpansionTaskResult call()
  {
-	// Called by the executor service when we submit the task.
-	// This task should run until the timeout is exceeded, at which point it will return
-	//   an expansion task result that contains the starting move and the winrate that produced.
-
-	// LOGIC
-	// While we haven't timed out
-	//   clone the starting board and make the expected move (could start from expected move)
-	//   play out the game with random moves using Kalah.makeMove(simulationBoard, move)
-	//   if we win add to total wins, lose add to total losses.
-	// work out the average win% and return new ExpansionTaskResult(startingMove, win%);
-
   nextSideToMove = playerSide;
   Move nextMove = null;
 
@@ -215,7 +204,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      return false;
  }
 
- private SimulationResult simulation() throws CloneNotSupportedException
+ private SimulationResult simulation() throws Exception
  {
       while (!Kalah.gameOver(simulationBoard))
       {
@@ -227,17 +216,21 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
       if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
       {
+	  writer.write("\nSimulation complete! Game is won!");
+	  writer.flush();
 	  return SimulationResult.Win;
       }   
       else 
       {
+	  writer.write("\nSimulation complete! Game is lost!");
+	  writer.flush();
 	  return SimulationResult.Loss;
       }
  }
 
- private void expansion(int newNode)
+ private void expansion(int newNode) throws IOException
  {
-     currentNode.children.add(new Node<MonteCarloData>(new MonteCarloData(newNode)));
+     currentNode.children.add(new Node<MonteCarloData>(new MonteCarloData(newNode), currentNode));
 
      for (int i = 0; i < currentNode.children.size(); ++i)
      {
@@ -245,19 +238,25 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	 {
 	     currentNode = currentNode.children.get(i);
 	     nextSideToMove = Kalah.makeMove(simulationBoard, new Move(nextSideToMove, newNode));
-
+	     writer.write("expanded node " + newNode + "\n");
+	     writer.flush();
 	     return;
 	 }
      }
  }
 
- private void backTrace(SimulationResult inResult)
+ private void backTrace(SimulationResult inResult) throws IOException
  {
      while (currentNode != tree)
      {
 	 currentNode.data.update(inResult);
 	 currentNode = currentNode.parent;
+	 writer.write("\nCurrent matches played: " + currentNode.data.getMatchesPlayed());
+	 writer.write("\nCurrent wins: " + currentNode.data.getWins());
+	 writer.flush();
      }
+     writer.write("\nWe fucking did it yeeeeeehah");
+     writer.flush();
      tree.data.update(inResult);
  }
 }

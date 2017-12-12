@@ -80,14 +80,14 @@ public class BFSMKAgent implements AgentInterface
 
   private int getBestValidHole()
   {
-    Node currentBoardNode = new Node(currentBoard);
+      // Node currentBoardNode = new Node(currentBoard);
 
     // currentBoardNode.addChild(simulateBoardChange(currentBoard, 1));
 
     try
     {
       writer = new BufferedWriter(new FileWriter("boardtree.txt"));
-      writer.write(currentBoardNode.toString() + "\n");
+      // writer.write(currentBoardNode.toString() + "\n");
       writer.close();
     }
     catch(Exception exception)

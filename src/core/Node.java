@@ -5,10 +5,10 @@ import java.util.ArrayList;
 
 public class Node<T> {
 
-  public Node(T _data) 
+  public Node(T _data, Node<T> inParent) 
   {
     data = _data;
-    parent = null;
+    parent = inParent;
     children = new ArrayList<Node<T>>();
   }
 
