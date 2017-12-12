@@ -15,7 +15,6 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 {
   private Board startingBoard;
   private Board simulationBoard;
-  private int startingMove;
   private Side playerSide;
   private int timeout;
   private Side nextSideToMove;
@@ -23,7 +22,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Node<MonteCarloData> currentNode;
   private BufferedWriter writer;
 
-  public ExpansionTask(Node<MonteCarloData> inRoot, Board inBoard, int inMove, Side inSide, int inTimeout) throws CloneNotSupportedException
+  public ExpansionTask(Node<MonteCarloData> inRoot, Board inBoard, Side inSide, int inTimeout) throws CloneNotSupportedException
   {
    startingBoard = inBoard;
    simulationBoard = startingBoard.clone();
@@ -32,7 +31,6 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
    tree = inRoot;
    currentNode = tree;
 
-   startingMove = inMove;
    timeout = inTimeout;
  }
 
@@ -95,20 +93,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   long currentTimeMillis = startTimeMillis;
   long endTime = startTimeMillis + timeout;
 
-  nextMove = new Move(nextSideToMove, startingMove);
-
-  if (Kalah.isLegalMove(startingBoard, nextMove))
-  {
-    nextSideToMove =  Kalah.makeMove(startingBoard, nextMove);
-  }
-  else
-  {
-    return new ExpansionTaskResult(startingMove,tree.data);
-  }
-
   try
   {
-      writer = new BufferedWriter(new FileWriter(currentTimeMillis + "-" + startingMove + ".txt"));
+      writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
       writer.write("\nBegin tree operation!");
       writer.flush();
       while (currentTimeMillis < endTime)
@@ -116,16 +103,26 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	simulationBoard.setBoard(startingBoard);  
 
 	int chosenMove = selection();
+	if (chosenMove == -1)
+	{
+	    return new ExpansionTaskResult(1, tree.data);
+	}
 	expansion(chosenMove);
 	SimulationResult newResult = simulation();
 	backTrace(newResult);
 	
         currentTimeMillis = System.currentTimeMillis();
-      }  
+	long timeLeft = endTime - currentTimeMillis;
+	// writer.write("\n\nTime left at end is: " + timeLeft);
+	// writer.flush();
+      }
 
+      long timeLeft = endTime - currentTimeMillis;
+       writer.write("\n\nTime left at end is: " + timeLeft);
+      writer.flush();
       writer.close();
       
-      return new ExpansionTaskResult(startingMove, tree.data);
+      return new ExpansionTaskResult(1, tree.data);
     }
   catch(Exception ex)
   {    
@@ -133,53 +130,74 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   }
 }
 
- private int selection() throws IOException
+ private int selection() throws Exception
  {
-     int unplayedMove = getLegalUnplayedMove();
+     int unplayedMove = getLegalUnplayedMove(currentNode);
+     Board previousBoard = simulationBoard.clone();
      // Find best unvisited node
      while (unplayedMove == -1)
      {
-	 writer.write("\nUnplayed node does not exist!");
-	 writer.flush();
+	 // writer.write("\nUnplayed node does not exist!");
+	 // writer.flush();
 	 Node<MonteCarloData> highestConfidenceBoundChild = null;
 	 double highestConfidenceBound = -1.0;
-
+	 
 	 for (Node<MonteCarloData> currentChild : currentNode.children)
 	 {
-	     writer.write("\nCurrentMove:" + currentChild.data.Move);
-	     writer.flush();
+	     // writer.write("\nCurrentMove:" + currentChild.data.Move);
+	     // writer.flush();
 	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
-	     if ( currentConfidenceBound > highestConfidenceBound)
+	     if ( currentConfidenceBound > highestConfidenceBound )
 	     {
 		 highestConfidenceBoundChild = currentChild;
 		 highestConfidenceBound = currentConfidenceBound;
 	     }
 	 }
+	 
+	 if (highestConfidenceBoundChild == null)
+	 {
+	     writer.write("\nReachedEndOfTree!");
+	     writer.flush();
+	     return -1;
+	 }
 
 	 currentNode = highestConfidenceBoundChild;
 	 nextSideToMove = Kalah.makeMove(simulationBoard, new Move(nextSideToMove, currentNode.data.Move));
 
-	 unplayedMove = getLegalUnplayedMove();
+	 unplayedMove = getLegalUnplayedMove(currentNode);	
      }
 
+     // writer.write("\nSelection is complete, move is " + unplayedMove);
+     // writer.flush();
      return unplayedMove;
  }
 
- private int getLegalUnplayedMove() throws IOException
+ private int getLegalUnplayedMove(Node<MonteCarloData> inNode) throws Exception
  {
-     writer.write("Try to find legal unplayed move!");
-     writer.flush();
-     if (currentNode.children.size() < MonteCarloAgent.HOLE_COUNT)
+     if (inNode.children.size() < MonteCarloAgent.HOLE_COUNT)
      {
 	 Vector<Integer> alreadySelectedMoves = new Vector<Integer>();
-	 for (Node<MonteCarloData> currentChild : currentNode.children)
+	 for (Node<MonteCarloData> currentChild : inNode.children)
 	 {
 	     alreadySelectedMoves.add(currentChild.data.Move);
 	 }
 
 	 for (int i = 1; i <= MonteCarloAgent.HOLE_COUNT;  ++i)
 	 {
-	     if (Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, i)) && !containsMove(i, alreadySelectedMoves))
+	     writer.write("\n current children: " + inNode.children.size());
+	     writer.flush();
+	     Move possibleMove = new Move(nextSideToMove, i);
+	     writer.write("\nPossible move is for square " + i);
+	     
+	     boolean isLegalMove = Kalah.isLegalMove(simulationBoard, possibleMove);
+	     boolean containsMove = containsMove(i, alreadySelectedMoves);
+	     boolean gameOver = isGameOver(simulationBoard, possibleMove);
+	     writer.write("\n Is legal?: " + isLegalMove);
+	     writer.write("\n containing move?: " + containsMove);
+	     writer.write("\n game over??: " + gameOver);
+	     writer.flush();
+
+	     if ( isLegalMove && !containsMove && !gameOver )
 	     {
 		 writer.write("\nFound unplayed move: " + i);
 		 writer.flush();
@@ -189,6 +207,16 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      }
      
      return -1;
+ }
+
+ private boolean isGameOver(Board inBoard, Move inMove) throws Exception
+ {
+     Board possibleMove = inBoard.clone();
+
+     Kalah.makeMove(possibleMove, inMove);
+     writer.write("\n board state:: " + possibleMove.toString());
+     writer.flush();
+     return Kalah.gameOver(possibleMove);
  }
 
  private boolean containsMove(int inMove, Vector<Integer> inExistingMoves)
@@ -208,22 +236,22 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
  {
       while (!Kalah.gameOver(simulationBoard))
       {
-          //int randomLegalHole = getRandomLegalHole();
-          int heuristicHole = getHeuristicHole(simulationBoard.clone());      
-          Move nextMove = new Move(nextSideToMove, heuristicHole);
+	  int foundHole = getRandomLegalHole();
+          // int foundHole = getHeuristicHole(simulationBoard.clone());      
+          Move nextMove = new Move(nextSideToMove, foundHole);
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }
 
       if (simulationBoard.getSeedsInStore(playerSide) > simulationBoard.getSeedsInStore(playerSide.opposite()))
       {
-	  writer.write("\nSimulation complete! Game is won!");
-	  writer.flush();
+	  //writer.write("\nSimulation complete! Game is won!");
+	  //writer.flush();
 	  return SimulationResult.Win;
       }   
       else 
       {
-	  writer.write("\nSimulation complete! Game is lost!");
-	  writer.flush();
+	  //writer.write("\nSimulation complete! Game is lost!");
+	  //writer.flush();
 	  return SimulationResult.Loss;
       }
  }
@@ -238,8 +266,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	 {
 	     currentNode = currentNode.children.get(i);
 	     nextSideToMove = Kalah.makeMove(simulationBoard, new Move(nextSideToMove, newNode));
-	     writer.write("expanded node " + newNode + "\n");
-	     writer.flush();
+	     //writer.write("expanded node " + newNode + "\n");
+	     //writer.flush();
 	     return;
 	 }
      }
@@ -255,8 +283,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	 writer.write("\nCurrent wins: " + currentNode.data.getWins());
 	 writer.flush();
      }
-     writer.write("\nWe fucking did it yeeeeeehah");
-     writer.flush();
+     // writer.write("\nWe fucking did it yeeeeeehah");
+     // writer.flush();
      tree.data.update(inResult);
  }
 }

@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 1500;
 
     public MonteCarloAgent()
     {
@@ -61,25 +61,7 @@ public class MonteCarloAgent implements AgentInterface
 		currentSide = Side.NORTH;
 	    }
 
-	    boolean foundChild = false;
-	    for (Node<MonteCarloData> currentChild : currentTree.children)
-	    {
-		if (currentChild.data.Move == move.move)
-		{
-		    foundChild = true;
-		    currentTree = currentChild;
-		}
-	    }
-
-	    currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(move.move), currentTree));
-
-	    for (Node<MonteCarloData> currentChild : currentTree.children)
-	    {
-		if (currentChild.data.Move == move.move)
-		{
-		    currentTree = currentChild;
-		}
-	    }
+	    updateTreeToNewState(move);
 	    
 	    if (!move.again)
 	    {
@@ -93,6 +75,32 @@ public class MonteCarloAgent implements AgentInterface
 	}
 	
 	return getFirstValidMove();
+    }
+
+    private void updateTreeToNewState(MoveTurn move)
+    {
+	boolean foundChild = false;
+	for (Node<MonteCarloData> currentChild : currentTree.children)
+	{
+	    if (currentChild.data.Move == move.move)
+	    {
+		foundChild = true;
+		currentTree = currentChild;
+	    }
+	}
+
+	if (!foundChild)
+	{
+	    currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(move.move), currentTree));
+
+	    for (Node<MonteCarloData> currentChild : currentTree.children)
+	    {
+	       if (currentChild.data.Move == move.move)
+	       {
+		  currentTree = currentChild;
+	       }
+	    }
+	}
     }
 
     private String getFirstValidMove()
@@ -115,22 +123,15 @@ public class MonteCarloAgent implements AgentInterface
 
     private String getMonteCarloSelectedResult() throws Exception
     {
-	Vector<Integer> validMoves = getAllLegalMoves();
+	new ExpansionTask
+	(
+	    currentTree,
+	    currentBoard.clone(), 
+	    currentSide,
+	    EXECUTION_TIMEOUT_MILLIS
+	).call();
 
-	ExecutorService executor = Executors.newFixedThreadPool(validMoves.size());
-	Vector<Future<ExpansionTaskResult>> tasksInFlight = submitExpansionTasks(executor, validMoves);	
-
-	int bestMove = getBestMove(tasksInFlight);
-		
-	executor.shutdown();
-
-	for (Node<MonteCarloData> currentChild: currentTree.children)
-	{
-	    if (currentChild.data.Move == bestMove)
-	    {
-		currentTree = currentChild;
-	    }
-	}
+	int bestMove = getNewBestMove();
 
 	return Protocol.createMoveMsg(bestMove);
     }
@@ -175,7 +176,6 @@ public class MonteCarloAgent implements AgentInterface
 		(
 		   child,
 		   currentBoard.clone(), 
-		   consideredMove,
 		   currentSide,
 		   EXECUTION_TIMEOUT_MILLIS
 		 )
@@ -200,6 +200,27 @@ public class MonteCarloAgent implements AgentInterface
 	for (Node<MonteCarloData> currentChild : currentTree.children)
 	{
 	    double newConfidenceBound = currentChild.data.getUpperConfidenceBound(currentTree.data.getMatchesPlayed());
+	    Main.writer.write("\nConfidence bound is " + newConfidenceBound);
+	    if (newConfidenceBound > bestConfidenceBound)
+	    {
+		bestConfidenceBound = newConfidenceBound;
+		currentBestMove = currentChild.data.Move;
+		Main.writer.write("Best move is now " + currentBestMove + "\n");
+	    }
+	}
+	
+	return currentBestMove;
+    }
+
+    private int getNewBestMove() throws Exception
+    {	
+	int currentBestMove = -1;
+	double bestConfidenceBound = -1;
+
+	for (Node<MonteCarloData> currentChild : currentTree.children)
+	{
+	    double newConfidenceBound = currentChild.data.getUpperConfidenceBound(currentTree.data.getMatchesPlayed());
+	    Main.writer.write("\nConfidence bound is " + newConfidenceBound);
 	    if (newConfidenceBound > bestConfidenceBound)
 	    {
 		bestConfidenceBound = newConfidenceBound;
