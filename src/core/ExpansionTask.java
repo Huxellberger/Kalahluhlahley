@@ -60,6 +60,32 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   return hole;
  }
 
+  private int getHeuristicHole(Board copyOfSimulationBoard)
+ {
+  int[] scores = new int[2];
+  scores[0] = -1; //current best pit
+  scores[1] = 0; //current best pit score
+
+  for (int i = 1; i < 8; i++)
+  {
+    if (Kalah.isLegalMove(copyOfSimulationBoard, new Move(nextSideToMove, i)))
+    {
+      if (scores[0] == -1)
+      {
+        scores[0] = i;
+      }
+
+      Kalah.makeMove(simulationBoard, new Move(nextSideToMove, currentNode.data.Move));
+      if (simulationBoard.getSeedsInStore(playerSide) > scores[1])
+      {
+        scores[0] = i;
+        scores[1] = simulationBoard.getSeedsInStore(playerSide);
+      }
+    }
+  }
+  return scores[0];
+ }
+
  public ExpansionTaskResult call()
  {
 	// Called by the executor service when we submit the task.
@@ -189,12 +215,13 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      return false;
  }
 
- private SimulationResult simulation()
+ private SimulationResult simulation() throws CloneNotSupportedException
  {
       while (!Kalah.gameOver(simulationBoard))
       {
-          int randomLegalHole = getRandomLegalHole();      
-          Move nextMove = new Move(nextSideToMove, randomLegalHole);
+          //int randomLegalHole = getRandomLegalHole();
+          int heuristicHole = getHeuristicHole(simulationBoard.clone());      
+          Move nextMove = new Move(nextSideToMove, heuristicHole);
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }
 
