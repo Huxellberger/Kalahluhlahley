@@ -20,7 +20,7 @@ public class MonteCarloAgent implements AgentInterface
     {
 	currentBoard = new Board(HOLE_COUNT, SEED_COUNT);
 	currentSide = Side.SOUTH;
-	currentTree = new Node<MonteCarloData>(new MonteCarloData(-1), null);
+	currentTree = new Node<MonteCarloData>(new MonteCarloData(-1, currentBoard, currentSide), null);
     }
 
     public Side getCurrentSide()
@@ -91,7 +91,7 @@ public class MonteCarloAgent implements AgentInterface
 
 	if (!foundChild)
 	{
-	    currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(move.move), currentTree));
+	    currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(move.move, currentBoard, currentSide), currentTree));
 
 	    for (Node<MonteCarloData> currentChild : currentTree.children)
 	    {
@@ -167,7 +167,7 @@ public class MonteCarloAgent implements AgentInterface
 
 	    if (child == null)
 	    {
-		currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(consideredMove), currentTree));
+		currentTree.children.add(new Node<MonteCarloData>(new MonteCarloData(consideredMove, currentBoard, currentSide), currentTree));
 		child = currentTree.children.get(currentTree.children.size() - 1);
 	    }
 

@@ -258,7 +258,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
  private void expansion(int newNode) throws IOException
  {
-     currentNode.children.add(new Node<MonteCarloData>(new MonteCarloData(newNode), currentNode));
+     currentNode.children.add(new Node<MonteCarloData>(new MonteCarloData(newNode, simulationBoard, nextSideToMove), currentNode));
 
      for (int i = 0; i < currentNode.children.size(); ++i)
      {
