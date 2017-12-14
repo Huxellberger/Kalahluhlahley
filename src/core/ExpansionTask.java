@@ -17,7 +17,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side playerSide;
   private int timeout;
   private Node<MonteCarloData> tree;
-  private BufferedWriter writer;
+  // private BufferedWriter writer;
 
   public ExpansionTask(Node<MonteCarloData> inRoot, int inTimeout)
   {
@@ -86,9 +86,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   try
   {
-      writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
-      writer.write("\nBegin tree operation!");
-      writer.flush();
+      // writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
+      // writer.write("\nBegin tree operation!");
+      // writer.flush();
       while (currentTimeMillis < endTime)
       {  
 	Node<MonteCarloData> chosenNode = selection(tree);
@@ -106,9 +106,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       }
 
       long timeLeft = endTime - currentTimeMillis;
-       writer.write("\n\nTime left at end is: " + timeLeft);
-      writer.flush();
-      writer.close();
+      // writer.write("\n\nTime left at end is: " + timeLeft);
+      // writer.flush();
+      // writer.close();
       
       return new ExpansionTaskResult(1, tree.data);
     }
@@ -144,12 +144,26 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	 // Need to patch this up
 	 if (highestConfidenceBoundChild == null)
 	 {
-	     writer.write("\nReachedEndOfTree!");
-	     writer.flush();
+	     // writer.write("\nReachedEndOfTree!");
+	     // writer.flush();
 	     return null;
 	 }
+	 
+	 Node<MonteCarloData> selectedChild = selection(highestConfidenceBoundChild);
+	     
+	 if (selectedChild == null)
+	 {
+	     for (Node<MonteCarloData> currentChild : inNode.children)
+	     {
+		 selectedChild = selection(currentChild);
+		 if (selectedChild != null)
+		 {
+		     break;
+		 }
+	     }
+	 }
 
-	 return selection(highestConfidenceBoundChild);
+	 return selectedChild;
      }
 
      // writer.write("\nSelection is complete, move is " + unplayedMove);
@@ -169,23 +183,23 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
 	 for (int i = 1; i <= MonteCarloAgent.HOLE_COUNT;  ++i)
 	 {
-	     writer.write("\n current children: " + inNode.children.size());
-	     writer.flush();
+	     //  writer.write("\n current children: " + inNode.children.size());
+	     // writer.flush();
 	     Move possibleMove = new Move(inNode.data.getCurrentSide(), i);
-	     writer.write("\nPossible move is for square " + i);
+	     // writer.write("\nPossible move is for square " + i);
 	     
 	     boolean isLegalMove = Kalah.isLegalMove(inNode.data.getCurrentBoard(), possibleMove);
 	     boolean containsMove = containsMove(i, alreadySelectedMoves);
 	     boolean gameOver = isGameOver(inNode.data.getCurrentBoard(), possibleMove);
-	     writer.write("\n Is legal?: " + isLegalMove);
-	     writer.write("\n containing move?: " + containsMove);
-	     writer.write("\n game over??: " + gameOver);
-	     writer.flush();
+	     // writer.write("\n Is legal?: " + isLegalMove);
+	     // writer.write("\n containing move?: " + containsMove);
+	     // writer.write("\n game over??: " + gameOver);
+	     // writer.flush();
 
 	     if ( isLegalMove && !containsMove && !gameOver )
 	     {
-		 writer.write("\nFound unplayed move: " + i);
-		 writer.flush();
+		 // writer.write("\nFound unplayed move: " + i);
+		 // writer.flush();
 		 return i;
 	     }
 	 } 
@@ -199,8 +213,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      Board possibleMove = inBoard.clone();
 
      Kalah.makeMove(possibleMove, inMove);
-     writer.write("\n board state:: " + possibleMove.toString());
-     writer.flush();
+     // writer.write("\n board state:: " + possibleMove.toString());
+     // writer.flush();
      return Kalah.gameOver(possibleMove);
  }
 
@@ -223,8 +237,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       Side nextSideToMove = currentNode.data.getCurrentSide();
       while (!Kalah.gameOver(simulationBoard))
       {
-	  // int foundHole = getRandomLegalHole(simulationBoard, nextSideToMove);
-          int foundHole = getHeuristicHole(simulationBoard.clone(), nextSideToMove);      
+	  int foundHole = getRandomLegalHole(simulationBoard, nextSideToMove);
+          // int foundHole = getHeuristicHole(simulationBoard.clone(), nextSideToMove);      
           Move nextMove = new Move(nextSideToMove, foundHole);
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }

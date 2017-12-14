@@ -3,7 +3,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
-public class Node<T> {
+public class Node<T>
+{
 
   public Node(T _data, Node<T> inParent) 
   {
