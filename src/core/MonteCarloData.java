@@ -4,11 +4,13 @@ public class MonteCarloData
 {
     public final int Move;
 
-    public MonteCarloData(int inMove)
+    public MonteCarloData(int inMove, Board inBoard, Side inSide)
     {
 	Move = inMove;
 	wins = 0;
 	matchesPlayed = 0;
+    currentBoard = inBoard;
+    currentSide = inSide;
     }
 
     public void update(SimulationResult inResult)
@@ -38,14 +40,26 @@ public class MonteCarloData
 
     public double getUpperConfidenceBound(int inTotalMatches)
     {
-	if (inTotalMatches == 0 || matchesPlayed == 0)
-	{
-	    return 0.0;
-	}
+    	if (inTotalMatches == 0 || matchesPlayed == 0)
+    	{
+    	    return 0.0;
+    	}
 
-	return wins/matchesPlayed + Math.sqrt((2 * Math.log(matchesPlayed)) /inTotalMatches);
+    	return wins/matchesPlayed + Math.sqrt((2 * Math.log(matchesPlayed)) /inTotalMatches);
+    }
+
+    public Board getCurrentBoard()
+    {
+        return currentBoard;
+    }
+
+    public Side getCurrentSide()
+    {
+        return currentSide;
     }
 
     private int wins;
     private int matchesPlayed;
+    private Board currentBoard;
+    private Side currentSide;
 }
