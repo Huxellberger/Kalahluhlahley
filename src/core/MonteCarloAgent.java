@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 1500;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
 
     public MonteCarloAgent()
     {
@@ -126,8 +126,6 @@ public class MonteCarloAgent implements AgentInterface
 	new ExpansionTask
 	(
 	    currentTree,
-	    currentBoard.clone(), 
-	    currentSide,
 	    EXECUTION_TIMEOUT_MILLIS
 	).call();
 
@@ -175,8 +173,6 @@ public class MonteCarloAgent implements AgentInterface
 	        new ExpansionTask
 		(
 		   child,
-		   currentBoard.clone(), 
-		   currentSide,
 		   EXECUTION_TIMEOUT_MILLIS
 		 )
 	    ));
@@ -227,6 +223,11 @@ public class MonteCarloAgent implements AgentInterface
 		currentBestMove = currentChild.data.Move;
 		Main.writer.write("Best move is now " + currentBestMove + "\n");
 	    }
+	}
+
+	if (currentBestMove == -1)
+	{
+	    return getFirstValidHole();
 	}
 	
 	return currentBestMove;

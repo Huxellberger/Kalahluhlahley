@@ -9,8 +9,8 @@ public class MonteCarloData
 	Move = inMove;
 	wins = 0;
 	matchesPlayed = 0;
-    currentBoard = inBoard;
-    currentSide = inSide;
+	currentBoard = inBoard;
+	currentSide = inSide;
     }
 
     public void update(SimulationResult inResult)
