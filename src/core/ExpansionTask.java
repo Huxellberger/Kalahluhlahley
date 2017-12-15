@@ -17,7 +17,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side playerSide;
   private int timeout;
   private Node<MonteCarloData> tree;
-  private BufferedWriter writer;
+  // private BufferedWriter writer;
 
   public class BestPossibleMove
   {
@@ -77,7 +77,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private int getBestMove(Vector<BestPossibleMove> inMoveResults) throws IOException
   {
       evaluateRepeatGoHole(inMoveResults);
-      evaluateMostEmptyHoles(inMoveResults);
+      evaluateCapturePoints(inMoveResults);
       evaluateMaxScoreHole(inMoveResults);
       
       int bestMove = -1;
@@ -108,34 +108,21 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       } 
   }
 
-  private void evaluateMostEmptyHoles(Vector<BestPossibleMove> inMoveResults)
+  private void evaluateCapturePoints(Vector<BestPossibleMove> inMoveResults)
   {
       int bestEmptyHoleCount = -1;
       int bestMove = -1;
+
       for (BestPossibleMove currentMove : inMoveResults)
       {
 	  int currentEmptyHoles = 0;
-	  for (int currentHole = 1; currentHole < MonteCarloAgent.HOLE_COUNT; currentHole++)
+	  for (int currentHole = 1; currentHole <= MonteCarloAgent.HOLE_COUNT; currentHole++)
 	  {
-	      if (currentMove.afterBoard.getSeeds(currentMove.beforeSide, currentHole) == 0)
+	      if ((currentMove.afterBoard.getSeeds(currentMove.beforeSide.opposite(), currentHole) == 0)
+		  && (currentMove.beforeBoard.getSeeds(currentMove.beforeSide.opposite(), currentHole) != 0))
 	      {
-		  currentEmptyHoles++;
+		  currentMove.score++;
 	      }
-	  }
-
-	  if (currentEmptyHoles > bestEmptyHoleCount)
-	  {
-	      bestEmptyHoleCount = currentEmptyHoles;
-	      bestMove = currentMove.move;
-	  }
-      }
-
-      for (BestPossibleMove currentMove : inMoveResults)
-      {
-	  if (currentMove.move == bestMove)
-	  {
-	      currentMove.score++;
-	      break;
 	  }
       }
   }
@@ -174,16 +161,18 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   try
   {
-      writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
+      // writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
       // writer.write("\nBegin tree operation!");
       // writer.flush();
       while (currentTimeMillis < endTime)
-      {  
+      { 
+	/*
 	for (Node<MonteCarloData> currentChild : tree.children)
 	{
 	    writer.write("\n matches played for root child is " + currentChild.data.getMatchesPlayed() + "\tWins: " + currentChild.data.getWins());
 	    writer.flush();
 	}
+	*/
 
 	Node<MonteCarloData> chosenNode = selection(tree);
 	if (chosenNode == null)
@@ -202,7 +191,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       long timeLeft = endTime - currentTimeMillis;
       // writer.write("\n\nTime left at end is: " + timeLeft);
       // writer.flush();
-      writer.close();
+      // writer.close();
       
       return new ExpansionTaskResult(1, tree.data);
     }
@@ -228,8 +217,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	     // writer.write("\nCurrentMove:" + currentChild.data.Move);
 	     // writer.flush();
 	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
-	     writer.write("\nCurrent Confidence Bound: " + currentConfidenceBound);
-	     writer.flush();
+	     // writer.write("\nCurrent Confidence Bound: " + currentConfidenceBound);
+	     // writer.flush();
 	     if ( currentConfidenceBound > highestConfidenceBound )
 	     {
 		 highestConfidenceBoundChild = currentChild;
@@ -352,11 +341,11 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 		       currentMove
 		     )
 		   );
-	      }
-	     
+	      } 
 	  }
 
-          Move nextMove = new Move(nextSideToMove, getBestMove(playedOutMoves));
+	  Move nextMove = new Move(nextSideToMove, getBestMove(playedOutMoves));
+	  // Move nextMove = new Move(nextSideToMove, getRandomLegalHole(simulationBoard, nextSideToMove));
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }
 
@@ -389,10 +378,13 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
  {
      if (chosenNode.data.getCurrentSide() == playerSide.opposite())
      {
-	 inResult = inResult.opposite();
+	 chosenNode.data.update(inResult.opposite());
      }
-
-     chosenNode.data.update(inResult);
+     else
+     {
+	 chosenNode.data.update(inResult);
+     }
+     
      // writer.write("\nNode Status: Wins are " + chosenNode.data.getWins() + " and games played is " + chosenNode.data.getMatchesPlayed());
      // writer.flush();
      if (chosenNode.parent != null)

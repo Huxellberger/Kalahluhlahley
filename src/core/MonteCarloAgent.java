@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 20000;
 
     public MonteCarloAgent()
     {
