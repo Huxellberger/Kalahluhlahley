@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 10000;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
 
     public MonteCarloAgent()
     {
@@ -66,7 +66,11 @@ public class MonteCarloAgent implements AgentInterface
 	    if (!move.again)
 	    {
 		return MoveTurn.NO_MOVE;
-	    }  
+	    }
+
+	    Main.writer.write("\nCurrent Side: " + currentSide);
+	    Main.writer.write("\nCurrent Board: " + currentBoard);
+	    Main.writer.flush();
 
 	    return getMonteCarloSelectedResult();
 	}
@@ -212,22 +216,25 @@ public class MonteCarloAgent implements AgentInterface
     private int getNewBestMove() throws Exception
     {	
 	int currentBestMove = -1;
-	double bestConfidenceBound = -1;
+	int bestMatchesPlayed = -1;
 
 	for (Node<MonteCarloData> currentChild : currentTree.children)
 	{
-	    double newConfidenceBound = currentChild.data.getUpperConfidenceBound(currentTree.data.getMatchesPlayed());
-	    Main.writer.write("\nConfidence bound is " + newConfidenceBound);
-	    if (newConfidenceBound > bestConfidenceBound)
+	    int currentMatchesPlayed = currentChild.data.getMatchesPlayed();
+	    Main.writer.write("\nMatches played is " + currentMatchesPlayed);
+	    if (currentMatchesPlayed > bestMatchesPlayed)
 	    {
-		bestConfidenceBound = newConfidenceBound;
+		bestMatchesPlayed = currentMatchesPlayed;
 		currentBestMove = currentChild.data.Move;
 		Main.writer.write("Best move is now " + currentBestMove + "\n");
+		Main.writer.flush();
 	    }
 	}
 
 	if (currentBestMove == -1)
 	{
+	    Main.writer.write("\nGot bad move, returning first valid one");
+	    Main.writer.flush();
 	    return getFirstValidHole();
 	}
 	

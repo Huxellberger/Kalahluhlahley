@@ -3,6 +3,7 @@ package MKAgent;
 public class MonteCarloData
 {
     public final int Move;
+    private static final double CONSTANT = 0.00001; 
 
     public MonteCarloData(int inMove, Board inBoard, Side inSide)
     {
@@ -45,7 +46,7 @@ public class MonteCarloData
     	    return 0.0;
     	}
 
-    	return wins/matchesPlayed + Math.sqrt((Math.log(inTotalMatches)) /matchesPlayed);
+    	return (wins/matchesPlayed) + (CONSTANT * Math.sqrt((Math.log(inTotalMatches)) /matchesPlayed));
     }
 
     public Board getCurrentBoard()

@@ -21,30 +21,24 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   public class BestPossibleMove
   {
-      public int move;
+      public final Board beforeBoard;
+      public final Board afterBoard;
+      public final Side beforeSide;
+      public final Side afterSide;
+      public final int move;
       public int score;
-      public int emptyHoles;
-      public boolean goAgain;
 
-      public BestPossibleMove()
+      public BestPossibleMove(Board inBeforeBoard, Board inAfterBoard, Side inBeforeSide, Side inAfterSide, int inMove)
       {
-	  setMove(-1, -1,-1, false);
-      }
+	  beforeBoard = inBeforeBoard;
+	  afterBoard = inAfterBoard;
+	  
+	  beforeSide = inBeforeSide;
+	  afterSide = inAfterSide;
 
-      public void setMove(int inMove, int inScore, int inEmptyHoles, boolean inGoAgain)
-      {
 	  move = inMove;
-	  score = inScore;
-	  goAgain = inGoAgain;
-	  emptyHoles = inEmptyHoles;
-      }
 
-      public void updateMove(int inMove, int inScore, int inEmptyHoles, boolean inGoAgain)
-      {
-	  if (inEmptyHoles > emptyHoles)
-	  {
-	      setMove(inMove, inScore, inEmptyHoles, inGoAgain);
-	  }
+	  score = 0;
       }
   }
 
@@ -80,74 +74,97 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   return hole;
  }
 
-  private int getBestHole(Board currentSimulationBoard, Side nextSideToMove) throws Exception
+  private int getBestMove(Vector<BestPossibleMove> inMoveResults) throws IOException
   {
-      BestPossibleMove currentBest = new BestPossibleMove();
-      for(int i = 1; i <= MonteCarloAgent.HOLE_COUNT; i++)
+      evaluateRepeatGoHole(inMoveResults);
+      evaluateMostEmptyHoles(inMoveResults);
+      evaluateMaxScoreHole(inMoveResults);
+      
+      int bestMove = -1;
+      int bestScore = -1;
+
+      for (BestPossibleMove currentMove : inMoveResults)
       {
-	  boolean extraMove = false;
-	  Board copyOfSimulationBoard = currentSimulationBoard.clone();
-	  Move nextMove = new Move(nextSideToMove, i);
-	  if (Kalah.isLegalMove(copyOfSimulationBoard, nextMove))
+	  // writer.write("\nCurrentMove: " + currentMove.move + "\tCurrentScore: " + currentMove.score);
+	  // writer.flush();
+	  if (currentMove.score > bestScore)
 	  {
-	      Side followingSide = Kalah.makeMove(copyOfSimulationBoard, nextMove);
-	      
-	      int numberOfEmptyHoles = 0;
-	      for (int currentBoardHole = 1; currentBoardHole <= MonteCarloAgent.HOLE_COUNT; currentBoardHole++)
-	      {
-		  if (copyOfSimulationBoard.getSeeds(nextSideToMove, currentBoardHole) == 0)
-		  {
-		      numberOfEmptyHoles++;
-		  }
-	      }
-
-	      if (followingSide == nextSideToMove)
-	      {
-		  extraMove = true;
-	      }
-
-	      currentBest.updateMove
-	      (
-	         i, 
-		 copyOfSimulationBoard.getSeedsInStore(followingSide),
-		 numberOfEmptyHoles, 
-		 extraMove
-	      );
-
-	      writer.write("\nBestMove: " + currentBest.move);
-	      writer.flush();
+	      bestMove = currentMove.move;
+	      bestScore = currentMove.score;
 	  }
       }
 
-      return currentBest.move;
+      return bestMove;
   }
 
-  private int getHeuristicHole(Board currentSimulationBoard, Side nextSideToMove) throws CloneNotSupportedException
- {
-  int[] scores = new int[2];
-  scores[0] = -1; //current best pit
-  scores[1] = 0; //current best pit score
-
-  for (int i = 1; i < 8; i++)
+  private void evaluateRepeatGoHole(Vector<BestPossibleMove> inMoveResults)
   {
-    Board copyOfSimulationBoard = currentSimulationBoard.clone();
-    if (Kalah.isLegalMove(copyOfSimulationBoard, new Move(nextSideToMove, i)))
-    {
-      if (scores[0] == -1)
+      for(BestPossibleMove currentMove : inMoveResults)
       {
-        scores[0] = i;
+	  if (currentMove.beforeSide == currentMove.afterSide)
+	  {
+	      currentMove.score += 1;
+	  }
+      } 
+  }
+
+  private void evaluateMostEmptyHoles(Vector<BestPossibleMove> inMoveResults)
+  {
+      int bestEmptyHoleCount = -1;
+      int bestMove = -1;
+      for (BestPossibleMove currentMove : inMoveResults)
+      {
+	  int currentEmptyHoles = 0;
+	  for (int currentHole = 1; currentHole < MonteCarloAgent.HOLE_COUNT; currentHole++)
+	  {
+	      if (currentMove.afterBoard.getSeeds(currentMove.beforeSide, currentHole) == 0)
+	      {
+		  currentEmptyHoles++;
+	      }
+	  }
+
+	  if (currentEmptyHoles > bestEmptyHoleCount)
+	  {
+	      bestEmptyHoleCount = currentEmptyHoles;
+	      bestMove = currentMove.move;
+	  }
       }
 
-      Kalah.makeMove(copyOfSimulationBoard, new Move(nextSideToMove, i));
-      if (copyOfSimulationBoard.getSeedsInStore(nextSideToMove) > scores[1])
+      for (BestPossibleMove currentMove : inMoveResults)
       {
-        scores[0] = i;
-        scores[1] = copyOfSimulationBoard.getSeedsInStore(nextSideToMove);
+	  if (currentMove.move == bestMove)
+	  {
+	      currentMove.score++;
+	      break;
+	  }
       }
-    }
   }
-  return scores[0];
- }
+
+  private void evaluateMaxScoreHole(Vector<BestPossibleMove> inMoveResults)
+  {
+      int bestScore = -1;
+      int bestMove = -1;
+
+      for (BestPossibleMove currentMove : inMoveResults)
+      {
+	  int currentScore = currentMove.afterBoard.getSeedsInStore(currentMove.beforeSide);
+	      
+	  if (currentScore > bestScore)
+	  {
+	      bestScore = currentScore;
+	      bestMove = currentMove.move;
+	  }
+      }
+
+      for (BestPossibleMove currentMove : inMoveResults)
+      {
+	  if (currentMove.move == bestMove)
+	  {
+	      currentMove.score++;
+	      break;
+	  }
+      }
+  }
 
  public ExpansionTaskResult call()
  {
@@ -162,6 +179,12 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       // writer.flush();
       while (currentTimeMillis < endTime)
       {  
+	for (Node<MonteCarloData> currentChild : tree.children)
+	{
+	    writer.write("\n matches played for root child is " + currentChild.data.getMatchesPlayed() + "\tWins: " + currentChild.data.getWins());
+	    writer.flush();
+	}
+
 	Node<MonteCarloData> chosenNode = selection(tree);
 	if (chosenNode == null)
 	{
@@ -179,7 +202,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       long timeLeft = endTime - currentTimeMillis;
       // writer.write("\n\nTime left at end is: " + timeLeft);
       // writer.flush();
-      // writer.close();
+      writer.close();
       
       return new ExpansionTaskResult(1, tree.data);
     }
@@ -205,6 +228,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	     // writer.write("\nCurrentMove:" + currentChild.data.Move);
 	     // writer.flush();
 	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
+	     writer.write("\nCurrent Confidence Bound: " + currentConfidenceBound);
+	     writer.flush();
 	     if ( currentConfidenceBound > highestConfidenceBound )
 	     {
 		 highestConfidenceBoundChild = currentChild;
@@ -308,10 +333,30 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       Side nextSideToMove = currentNode.data.getCurrentSide();
       while (!Kalah.gameOver(simulationBoard))
       {
-	  // int foundHole = getRandomLegalHole(simulationBoard, nextSideToMove);
-          // int foundHole = getHeuristicHole(simulationBoard.clone(), nextSideToMove);
-	  int foundHole = getBestHole(simulationBoard, nextSideToMove);
-          Move nextMove = new Move(nextSideToMove, foundHole);
+	  // Evaluate heuristics
+	  Vector<BestPossibleMove> playedOutMoves = new Vector<BestPossibleMove>();
+	  for (int currentMove = 1; currentMove <= MonteCarloAgent.HOLE_COUNT; currentMove++)
+	  {
+	      if (Kalah.isLegalMove(simulationBoard, new Move(nextSideToMove, currentMove)))
+	      {
+		  Board copyOfSimulationBoard = simulationBoard.clone();
+		  Side sideAfterMove = Kalah.makeMove(copyOfSimulationBoard, new Move(nextSideToMove, currentMove));
+		  playedOutMoves.add
+		  (
+		     new BestPossibleMove
+		     (
+		       simulationBoard, 
+		       copyOfSimulationBoard, 
+		       nextSideToMove, 
+		       sideAfterMove, 
+		       currentMove
+		     )
+		   );
+	      }
+	     
+	  }
+
+          Move nextMove = new Move(nextSideToMove, getBestMove(playedOutMoves));
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }
 
@@ -348,6 +393,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
      }
 
      chosenNode.data.update(inResult);
+     // writer.write("\nNode Status: Wins are " + chosenNode.data.getWins() + " and games played is " + chosenNode.data.getMatchesPlayed());
+     // writer.flush();
      if (chosenNode.parent != null)
      {
 	 backTrace(inResult, chosenNode.parent);
