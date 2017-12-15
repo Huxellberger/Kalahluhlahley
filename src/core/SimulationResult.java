@@ -3,5 +3,14 @@ package MKAgent;
 public enum SimulationResult
 {
     Win,
-    Loss
+    Loss;
+
+    public SimulationResult opposite()
+    {
+	if (this == SimulationResult.Win)
+	{
+	    return SimulationResult.Loss;
+	}
+	return SimulationResult.Win;
+    }
 }

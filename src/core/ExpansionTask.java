@@ -19,6 +19,36 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Node<MonteCarloData> tree;
   // private BufferedWriter writer;
 
+  public class BestPossibleMove
+  {
+      public int move;
+      public int score;
+      public boolean goAgain;
+
+      public BestPossibleMove(int inMove, int inScore, boolean inGoAgain)
+      {
+	  setMove(inMove, inScore, inGoAgain);
+      }
+
+      public void setMove(int inMove, int inScore, boolean inGoAgain)
+      {
+	  move = inMove;
+	  score = inScore;
+	  goAgain = inGoAgain;
+      }
+
+      public void updateMove(int inMove, int inScore, boolean inGoAgain)
+      {
+	  if (inGoAgain || (!goAgain && !inGoAgain))
+	  {
+	      if (inScore > score)
+	      {
+		  setMove(inMove, inScore, inGoAgain);
+	      }
+	  }
+      }
+  }
+
   public ExpansionTask(Node<MonteCarloData> inRoot, int inTimeout)
   {
    playerSide = inRoot.data.getCurrentSide();
@@ -51,6 +81,28 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   return hole;
  }
 
+  private int getBestHole(Board currentSimulationBoard, Side nextSideToMove) throws CloneNotSupportedException
+  {
+      BestPossibleMove currentBest = new BestPossibleMove(-1, -1, false);
+      for(int i = 1; i < MonteCarloAgent.HOLE_COUNT; i++)
+      {
+	  boolean extraMove = false;
+	  Board copyOfSimulationBoard = currentSimulationBoard.clone();
+	  Move nextMove = new Move(nextSideToMove, i);
+	  if (Kalah.isLegalMove(copyOfSimulationBoard, new Move(nextSideToMove, i)))
+	  {
+	      Side followingSide = Kalah.makeMove(copyOfSimulationBoard, nextMove);
+	      if (followingSide == nextSideToMove)
+	      {
+		  extraMove = true;
+	      }
+	      currentBest.updateMove(i, copyOfSimulationBoard.getSeedsInStore(followingSide), extraMove);
+	  }
+      }
+
+      return currentBest.move;
+  }
+
   private int getHeuristicHole(Board currentSimulationBoard, Side nextSideToMove) throws CloneNotSupportedException
  {
   int[] scores = new int[2];
@@ -68,10 +120,10 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       }
 
       Kalah.makeMove(copyOfSimulationBoard, new Move(nextSideToMove, i));
-      if (copyOfSimulationBoard.getSeedsInStore(playerSide) > scores[1])
+      if (copyOfSimulationBoard.getSeedsInStore(nextSideToMove) > scores[1])
       {
         scores[0] = i;
-        scores[1] = copyOfSimulationBoard.getSeedsInStore(playerSide);
+        scores[1] = copyOfSimulationBoard.getSeedsInStore(nextSideToMove);
       }
     }
   }
@@ -237,8 +289,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       Side nextSideToMove = currentNode.data.getCurrentSide();
       while (!Kalah.gameOver(simulationBoard))
       {
-	  int foundHole = getRandomLegalHole(simulationBoard, nextSideToMove);
-          // int foundHole = getHeuristicHole(simulationBoard.clone(), nextSideToMove);      
+	  // int foundHole = getRandomLegalHole(simulationBoard, nextSideToMove);
+          // int foundHole = getHeuristicHole(simulationBoard.clone(), nextSideToMove);
+	  int foundHole = getBestHole(simulationBoard, nextSideToMove);
           Move nextMove = new Move(nextSideToMove, foundHole);
           nextSideToMove = Kalah.makeMove(simulationBoard, nextMove);          
       }
@@ -270,6 +323,11 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
  private void backTrace(SimulationResult inResult, Node<MonteCarloData> chosenNode) throws IOException
  {
+     if (chosenNode.data.getCurrentSide() == playerSide.opposite())
+     {
+	 inResult = inResult.opposite();
+     }
+
      chosenNode.data.update(inResult);
      if (chosenNode.parent != null)
      {

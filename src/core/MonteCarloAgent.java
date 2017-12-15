@@ -101,6 +101,7 @@ public class MonteCarloAgent implements AgentInterface
 	       }
 	    }
 	}
+	currentTree.parent = null;
     }
 
     private String getFirstValidMove()
