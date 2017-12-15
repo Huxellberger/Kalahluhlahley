@@ -45,7 +45,7 @@ public class MonteCarloData
     	    return 0.0;
     	}
 
-    	return wins/matchesPlayed + Math.sqrt((2 * Math.log(matchesPlayed)) /inTotalMatches);
+    	return wins/matchesPlayed + Math.sqrt((Math.log(inTotalMatches)) /matchesPlayed);
     }
 
     public Board getCurrentBoard()

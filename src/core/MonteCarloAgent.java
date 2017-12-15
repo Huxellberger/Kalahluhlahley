@@ -14,7 +14,7 @@ public class MonteCarloAgent implements AgentInterface
 
     public static final int HOLE_COUNT = 7;
     public static final int SEED_COUNT = 7;
-    public static final int EXECUTION_TIMEOUT_MILLIS = 5000;
+    public static final int EXECUTION_TIMEOUT_MILLIS = 10000;
 
     public MonteCarloAgent()
     {
@@ -192,15 +192,15 @@ public class MonteCarloAgent implements AgentInterface
 	}
 
 	int currentBestMove = -1;
-	double bestConfidenceBound = -1;
+	int bestMatchCount = -1;
 
 	for (Node<MonteCarloData> currentChild : currentTree.children)
 	{
-	    double newConfidenceBound = currentChild.data.getUpperConfidenceBound(currentTree.data.getMatchesPlayed());
-	    Main.writer.write("\nConfidence bound is " + newConfidenceBound);
-	    if (newConfidenceBound > bestConfidenceBound)
+	    int currentMatchCount = currentChild.data.getMatchesPlayed();
+	    Main.writer.write("\nConfidence bound is " + currentMatchCount);
+	    if (currentMatchCount > bestMatchCount)
 	    {
-		bestConfidenceBound = newConfidenceBound;
+		bestMatchCount = currentMatchCount;
 		currentBestMove = currentChild.data.Move;
 		Main.writer.write("Best move is now " + currentBestMove + "\n");
 	    }

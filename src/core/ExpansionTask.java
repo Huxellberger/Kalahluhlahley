@@ -17,34 +17,33 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side playerSide;
   private int timeout;
   private Node<MonteCarloData> tree;
-  // private BufferedWriter writer;
+  private BufferedWriter writer;
 
   public class BestPossibleMove
   {
       public int move;
       public int score;
+      public int emptyHoles;
       public boolean goAgain;
 
-      public BestPossibleMove(int inMove, int inScore, boolean inGoAgain)
+      public BestPossibleMove()
       {
-	  setMove(inMove, inScore, inGoAgain);
+	  setMove(-1, -1,-1, false);
       }
 
-      public void setMove(int inMove, int inScore, boolean inGoAgain)
+      public void setMove(int inMove, int inScore, int inEmptyHoles, boolean inGoAgain)
       {
 	  move = inMove;
 	  score = inScore;
 	  goAgain = inGoAgain;
+	  emptyHoles = inEmptyHoles;
       }
 
-      public void updateMove(int inMove, int inScore, boolean inGoAgain)
+      public void updateMove(int inMove, int inScore, int inEmptyHoles, boolean inGoAgain)
       {
-	  if (inGoAgain || (!goAgain && !inGoAgain))
+	  if (inEmptyHoles > emptyHoles)
 	  {
-	      if (inScore > score)
-	      {
-		  setMove(inMove, inScore, inGoAgain);
-	      }
+	      setMove(inMove, inScore, inEmptyHoles, inGoAgain);
 	  }
       }
   }
@@ -81,22 +80,42 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   return hole;
  }
 
-  private int getBestHole(Board currentSimulationBoard, Side nextSideToMove) throws CloneNotSupportedException
+  private int getBestHole(Board currentSimulationBoard, Side nextSideToMove) throws Exception
   {
-      BestPossibleMove currentBest = new BestPossibleMove(-1, -1, false);
-      for(int i = 1; i < MonteCarloAgent.HOLE_COUNT; i++)
+      BestPossibleMove currentBest = new BestPossibleMove();
+      for(int i = 1; i <= MonteCarloAgent.HOLE_COUNT; i++)
       {
 	  boolean extraMove = false;
 	  Board copyOfSimulationBoard = currentSimulationBoard.clone();
 	  Move nextMove = new Move(nextSideToMove, i);
-	  if (Kalah.isLegalMove(copyOfSimulationBoard, new Move(nextSideToMove, i)))
+	  if (Kalah.isLegalMove(copyOfSimulationBoard, nextMove))
 	  {
 	      Side followingSide = Kalah.makeMove(copyOfSimulationBoard, nextMove);
+	      
+	      int numberOfEmptyHoles = 0;
+	      for (int currentBoardHole = 1; currentBoardHole <= MonteCarloAgent.HOLE_COUNT; currentBoardHole++)
+	      {
+		  if (copyOfSimulationBoard.getSeeds(nextSideToMove, currentBoardHole) == 0)
+		  {
+		      numberOfEmptyHoles++;
+		  }
+	      }
+
 	      if (followingSide == nextSideToMove)
 	      {
 		  extraMove = true;
 	      }
-	      currentBest.updateMove(i, copyOfSimulationBoard.getSeedsInStore(followingSide), extraMove);
+
+	      currentBest.updateMove
+	      (
+	         i, 
+		 copyOfSimulationBoard.getSeedsInStore(followingSide),
+		 numberOfEmptyHoles, 
+		 extraMove
+	      );
+
+	      writer.write("\nBestMove: " + currentBest.move);
+	      writer.flush();
 	  }
       }
 
@@ -138,7 +157,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   try
   {
-      // writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
+      writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
       // writer.write("\nBegin tree operation!");
       // writer.flush();
       while (currentTimeMillis < endTime)
