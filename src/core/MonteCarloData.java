@@ -3,7 +3,7 @@ package MKAgent;
 public class MonteCarloData
 {
     public final int Move;
-    private static final double CONSTANT = 1.4; 
+    private static final double CONSTANT = 1.41421356237; 
 
     public MonteCarloData(int inMove, Board inBoard, Side inSide)
     {

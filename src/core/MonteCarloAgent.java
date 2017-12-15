@@ -131,6 +131,7 @@ public class MonteCarloAgent implements AgentInterface
 	new ExpansionTask
 	(
 	    currentTree,
+      currentSide,
 	    EXECUTION_TIMEOUT_MILLIS
 	).call();
 
@@ -178,6 +179,7 @@ public class MonteCarloAgent implements AgentInterface
 	        new ExpansionTask
 		(
 		   child,
+       currentSide,
 		   EXECUTION_TIMEOUT_MILLIS
 		 )
 	    ));
@@ -221,8 +223,9 @@ public class MonteCarloAgent implements AgentInterface
 	for (Node<MonteCarloData> currentChild : currentTree.children)
 	{
 	    int currentMatchesPlayed = currentChild.data.getMatchesPlayed();
-	    Main.writer.write("\nMatches played is " + currentMatchesPlayed);
-	    if (currentMatchesPlayed > bestMatchesPlayed)
+      double currentWinRatio = (double)currentChild.data.getWins() / (double)currentMatchesPlayed;
+	    Main.writer.write("\nMatches played is " + currentMatchesPlayed + "Wins Ratio: " + currentWinRatio + "\n");
+	    if (currentMatchesPlayed < bestMatchesPlayed)
 	    {
 		bestMatchesPlayed = currentMatchesPlayed;
 		currentBestMove = currentChild.data.Move;

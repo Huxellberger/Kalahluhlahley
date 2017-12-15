@@ -17,7 +17,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
   private Side playerSide;
   private int timeout;
   private Node<MonteCarloData> tree;
-  private BufferedWriter writer;
+  //private BufferedWriter writer;
 
   public class BestPossibleMove
   {
@@ -42,9 +42,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       }
   }
 
-  public ExpansionTask(Node<MonteCarloData> inRoot, int inTimeout)
+  public ExpansionTask(Node<MonteCarloData> inRoot, Side thisSide, int inTimeout)
   {
-   playerSide = inRoot.data.getCurrentSide();
+   playerSide = thisSide;
    tree = inRoot;
 
    timeout = inTimeout;
@@ -76,8 +76,9 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   private int getBestMove(Vector<BestPossibleMove> inMoveResults) throws IOException
   {
-      evaluateRepeatGoHole(inMoveResults);
-      evaluateMostEmptyHoles(inMoveResults);
+      //evaluateRepeatGoHole(inMoveResults);
+      //evaluateMostEmptyHoles(inMoveResults);
+      evaluateKeepSeedsOnOurSide(inMoveResults);
       evaluateMaxScoreHole(inMoveResults);
       
       int bestMove = -1;
@@ -106,6 +107,24 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	      currentMove.score += 1;
 	  }
       } 
+  }
+
+  private void evaluateKeepSeedsOnOurSide(Vector<BestPossibleMove> inMoveResults)
+  {    
+    for(BestPossibleMove currentMove : inMoveResults)
+    {
+      int totalOpponentSeedsIncrease = 0;
+
+      for (int i = 1; i < MonteCarloAgent.HOLE_COUNT; i++)
+      {
+        totalOpponentSeedsIncrease += currentMove.afterBoard.getSeeds(currentMove.afterSide, i);
+      }
+
+      if (totalOpponentSeedsIncrease == 0)
+      {
+        currentMove.score++;
+      }
+    }
   }
 
   private void evaluateMostEmptyHoles(Vector<BestPossibleMove> inMoveResults)
@@ -174,15 +193,15 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 
   try
   {
-      writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
+      //writer = new BufferedWriter(new FileWriter(currentTimeMillis + ".txt"));
       // writer.write("\nBegin tree operation!");
       // writer.flush();
       while (currentTimeMillis < endTime)
       {  
 	for (Node<MonteCarloData> currentChild : tree.children)
 	{
-	    writer.write("\n matches played for root child is " + currentChild.data.getMatchesPlayed() + "\tWins: " + currentChild.data.getWins());
-	    writer.flush();
+	    //writer.write("\n matches played for root child is " + currentChild.data.getMatchesPlayed() + "\tWins: " + currentChild.data.getWins());
+	    //writer.flush();
 	}
 
 	Node<MonteCarloData> chosenNode = selection(tree);
@@ -202,7 +221,7 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
       long timeLeft = endTime - currentTimeMillis;
       // writer.write("\n\nTime left at end is: " + timeLeft);
       // writer.flush();
-      writer.close();
+      //writer.close();
       
       return new ExpansionTaskResult(1, tree.data);
     }
@@ -228,8 +247,8 @@ public class ExpansionTask implements Callable<ExpansionTaskResult>
 	     // writer.write("\nCurrentMove:" + currentChild.data.Move);
 	     // writer.flush();
 	     double currentConfidenceBound = currentChild.data.getUpperConfidenceBound(tree.data.getMatchesPlayed());
-	     writer.write("\nCurrent Confidence Bound: " + currentConfidenceBound);
-	     writer.flush();
+	     //writer.write("\nCurrent Confidence Bound: " + currentConfidenceBound);
+	     //writer.flush();
 	     if ( currentConfidenceBound > highestConfidenceBound )
 	     {
 		 highestConfidenceBoundChild = currentChild;
